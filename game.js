@@ -1550,20 +1550,27 @@ class Game {
 
     initRenderer() {
         if (this.renderer) return;
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+        const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        this.renderer = new THREE.WebGLRenderer({
+            canvas: this.canvas,
+            antialias: !isMobile,
+            powerPreference: isMobile ? 'high-performance' : 'default'
+        });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
+        this.renderer.shadowMap.enabled = !isMobile;
+        if (!isMobile) this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.renderer.setClearColor(0x0a0a15);
-        window.addEventListener('resize', () => {
+        const onResize = () => {
             if (!this.renderer) return;
             this.renderer.setSize(window.innerWidth, window.innerHeight);
             if (this.camera) {
                 this.camera.aspect = window.innerWidth / window.innerHeight;
                 this.camera.updateProjectionMatrix();
             }
-        });
+        };
+        window.addEventListener('resize', onResize);
+        window.addEventListener('orientationchange', () => setTimeout(onResize, 150));
     }
 
     start(levelNum) {
@@ -1747,6 +1754,183 @@ class Game {
         document.getElementById('btn-cam-tps').addEventListener('click', () => this.setCameraMode('tps'));
         document.getElementById('btn-cam-fps').addEventListener('click', () => this.setCameraMode('fps'));
         document.getElementById('btn-cam-top').addEventListener('click', () => this.setCameraMode('top'));
+
+        // ===== MOBILE TOUCH CONTROLS =====
+        this.isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        this._joystickActive = false;
+        this._joystickTouchId = null;
+        this._aimTouchId = null;
+        this._lastAimX = 0;
+        this._lastAimY = 0;
+
+        if (this.isMobile) {
+            this._setupMobileControls();
+        }
+    }
+
+    _setupMobileControls() {
+        const joystickZone = document.getElementById('joystick-zone');
+        const joystickBase = document.getElementById('joystick-base');
+        const joystickThumb = document.getElementById('joystick-thumb');
+        const aimZone = document.getElementById('mobile-aim-zone');
+        const baseRect = () => joystickBase.getBoundingClientRect();
+        const baseRadius = 60;
+        const thumbRadius = 23;
+        const deadZone = 8;
+
+        // --- JOYSTICK ---
+        const onJoystickMove = (cx, cy) => {
+            const r = baseRect();
+            const centerX = r.left + r.width / 2;
+            const centerY = r.top + r.height / 2;
+            let dx = cx - centerX;
+            let dy = cy - centerY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const maxDist = baseRadius - thumbRadius;
+            if (dist > maxDist) { dx = (dx / dist) * maxDist; dy = (dy / dist) * maxDist; }
+            joystickThumb.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+            joystickThumb.classList.add('active');
+
+            // Map to player keys
+            const normX = dx / maxDist;
+            const normY = dy / maxDist;
+            this.player.keys.arrowleft = normX < -0.3;
+            this.player.keys.arrowright = normX > 0.3;
+            this.player.keys.arrowup = normY < -0.3;   // Up on screen = forward
+            this.player.keys.arrowdown = normY > 0.3;
+            // Also set W/A/D for movement calc
+            this.player.keys.a = normX < -0.3;
+            this.player.keys.d = normX > 0.3;
+            this.player.keys.w = normY < -0.3;
+        };
+
+        const resetJoystick = () => {
+            joystickThumb.style.transform = 'translate(-50%, -50%)';
+            joystickThumb.classList.remove('active');
+            this.player.keys.arrowleft = false;
+            this.player.keys.arrowright = false;
+            this.player.keys.arrowup = false;
+            this.player.keys.arrowdown = false;
+            this.player.keys.w = false;
+            this.player.keys.a = false;
+            this.player.keys.d = false;
+            this._joystickActive = false;
+            this._joystickTouchId = null;
+        };
+
+        joystickZone.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (this._joystickTouchId !== null) return;
+            const t = e.changedTouches[0];
+            this._joystickTouchId = t.identifier;
+            this._joystickActive = true;
+            onJoystickMove(t.clientX, t.clientY);
+        }, { passive: false });
+
+        joystickZone.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            for (const t of e.changedTouches) {
+                if (t.identifier === this._joystickTouchId) {
+                    onJoystickMove(t.clientX, t.clientY);
+                }
+            }
+        }, { passive: false });
+
+        joystickZone.addEventListener('touchend', (e) => {
+            for (const t of e.changedTouches) {
+                if (t.identifier === this._joystickTouchId) resetJoystick();
+            }
+        });
+        joystickZone.addEventListener('touchcancel', (e) => {
+            for (const t of e.changedTouches) {
+                if (t.identifier === this._joystickTouchId) resetJoystick();
+            }
+        });
+
+        // --- AIM ZONE (drag to aim) ---
+        aimZone.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (this._aimTouchId !== null) return;
+            const t = e.changedTouches[0];
+            this._aimTouchId = t.identifier;
+            this._lastAimX = t.clientX;
+            this._lastAimY = t.clientY;
+        }, { passive: false });
+
+        aimZone.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            for (const t of e.changedTouches) {
+                if (t.identifier === this._aimTouchId) {
+                    const dx = t.clientX - this._lastAimX;
+                    const sensitivity = 0.006;
+                    this.aimAngle -= dx * sensitivity;
+                    this.aimAngle = ((this.aimAngle + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+                    this._lastAimX = t.clientX;
+                    this._lastAimY = t.clientY;
+                }
+            }
+        }, { passive: false });
+
+        aimZone.addEventListener('touchend', (e) => {
+            for (const t of e.changedTouches) {
+                if (t.identifier === this._aimTouchId) this._aimTouchId = null;
+            }
+        });
+        aimZone.addEventListener('touchcancel', (e) => {
+            for (const t of e.changedTouches) {
+                if (t.identifier === this._aimTouchId) this._aimTouchId = null;
+            }
+        });
+
+        // --- ACTION BUTTONS ---
+        const shootBtn = document.getElementById('btn-mobile-shoot');
+        const bombBtn = document.getElementById('btn-mobile-bomb');
+        const reloadBtn = document.getElementById('btn-mobile-reload');
+        const scopeBtn = document.getElementById('btn-mobile-scope');
+        const pauseBtn = document.getElementById('btn-mobile-pause');
+
+        // Shoot: hold to fire
+        shootBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.player.shooting = true;
+            shootBtn.classList.add('pressed');
+        }, { passive: false });
+        shootBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            this.player.shooting = false;
+            shootBtn.classList.remove('pressed');
+        });
+        shootBtn.addEventListener('touchcancel', () => {
+            this.player.shooting = false;
+            shootBtn.classList.remove('pressed');
+        });
+
+        // Bomb: tap
+        bombBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.throwBomb();
+        }, { passive: false });
+
+        // Reload: tap
+        reloadBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.player.startReload();
+        }, { passive: false });
+
+        // Scope: toggle
+        let scopeActive = false;
+        scopeBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            scopeActive = !scopeActive;
+            this.toggleScope(scopeActive);
+            scopeBtn.classList.toggle('pressed', scopeActive);
+        }, { passive: false });
+
+        // Pause
+        pauseBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.togglePause();
+        }, { passive: false });
     }
 
     unbindInput() {
@@ -1794,15 +1978,23 @@ class Game {
 
     _doThrow(bombDef) {
         this.player.bombCooldown = 1000;
-        // Calculate target position from aim
-        this.raycaster.setFromCamera(new THREE.Vector2(this.mouseX, this.mouseY), this.camera);
         const targetPos = new THREE.Vector3();
-        if (!this.raycaster.ray.intersectPlane(this.groundPlane, targetPos)) {
+        if (this.isMobile) {
+            // On mobile, throw in facing direction
             targetPos.set(
                 this.player.x + Math.sin(this.player.angle) * 10,
                 0,
                 this.player.z + Math.cos(this.player.angle) * 10
             );
+        } else {
+            this.raycaster.setFromCamera(new THREE.Vector2(this.mouseX, this.mouseY), this.camera);
+            if (!this.raycaster.ray.intersectPlane(this.groundPlane, targetPos)) {
+                targetPos.set(
+                    this.player.x + Math.sin(this.player.angle) * 10,
+                    0,
+                    this.player.z + Math.cos(this.player.angle) * 10
+                );
+            }
         }
         // Clamp throw distance to 15 units
         const dx = targetPos.x - this.player.x;
@@ -1819,22 +2011,27 @@ class Game {
     }
 
     updateAim() {
-        // Raycast from mouse to ground plane to get aim direction
-        this.raycaster.setFromCamera(new THREE.Vector2(this.mouseX, this.mouseY), this.camera);
-        const intersection = new THREE.Vector3();
-        if (this.raycaster.ray.intersectPlane(this.groundPlane, intersection)) {
-            const dx = intersection.x - this.player.x;
-            const dz = intersection.z - this.player.z;
-            this.aimAngle = Math.atan2(dx, dz);
+        // On mobile, aim is controlled by touch drag — skip raycast
+        if (!this.isMobile) {
+            this.raycaster.setFromCamera(new THREE.Vector2(this.mouseX, this.mouseY), this.camera);
+            const intersection = new THREE.Vector3();
+            if (this.raycaster.ray.intersectPlane(this.groundPlane, intersection)) {
+                const dx = intersection.x - this.player.x;
+                const dz = intersection.z - this.player.z;
+                this.aimAngle = Math.atan2(dx, dz);
+            }
         }
 
         // Normalize aimAngle to [-PI, PI]
         this.aimAngle = ((this.aimAngle + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
 
-        // Auto-aim assist: snap to nearest enemy when moving toward them
+        // Auto-aim assist: snap to nearest enemy when moving (or always on mobile)
         const p = this.player;
         const moving = p.keys.w || p.keys.a || p.keys.d || p.keys.arrowup || p.keys.arrowdown || p.keys.arrowleft || p.keys.arrowright;
-        if (moving && this.enemies.length > 0) {
+        const autoAimActive = this.isMobile || moving;
+        const aimCone = this.isMobile ? 0.5 : 0.75; // wider cone on mobile (~60° vs ~40°)
+        const aimLerp = this.isMobile ? 0.2 : 0.12;  // stronger assist on mobile
+        if (autoAimActive && this.enemies.length > 0) {
             let bestEnemy = null;
             let bestScore = Infinity;
             const aimDir = new THREE.Vector2(Math.sin(this.aimAngle), Math.cos(this.aimAngle)).normalize();
@@ -1852,7 +2049,7 @@ class Game {
                 const dot = aimDir.dot(toEnemy);
 
                 // Only assist if enemy is roughly in aim direction (within ~40°)
-                if (dot > 0.75) {
+                if (dot > aimCone) {
                     // Score: prefer closer enemies that are more aligned
                     const score = dist * (2 - dot);
                     if (score < bestScore) {
@@ -1866,7 +2063,7 @@ class Game {
                 const targetAngle = Math.atan2(bestEnemy.x - p.x, bestEnemy.z - p.z);
                 let diff = targetAngle - this.aimAngle;
                 diff = ((diff + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
-                this.aimAngle += diff * 0.12;
+                this.aimAngle += diff * aimLerp;
                 // Keep normalized
                 this.aimAngle = ((this.aimAngle + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
             }
@@ -1874,6 +2071,7 @@ class Game {
     }
 
     updateCrosshairTarget() {
+        if (this.isMobile) return; // crosshair hidden on mobile
         const ch = document.getElementById('crosshair');
         const zoomDot = document.querySelector('.scope-zoom-dot');
         let onTarget = false;
