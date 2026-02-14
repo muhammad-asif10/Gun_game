@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHADOW STRIKE — City Defender</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'><rect x='4' y='12' width='22' height='7' rx='1.5' fill='%23666'/><rect x='22' y='10' width='10' height='11' rx='2' fill='%23555'/><rect x='16' y='19' width='6' height='10' rx='1' fill='%23444'/></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+    <div id="game-container">
+        <!-- LOADING SCREEN -->
+        <div id="loading-screen" class="screen active">
+            <img src="splash_screen1.png" alt="SHADOW STRIKE" id="splash-img">
+            <div class="loading-content">
+                <h1 class="game-title glitch" data-text="SHADOW STRIKE">SHADOW STRIKE</h1>
+                <p class="subtitle">CITY DEFENDER</p>
+                <div class="loading-bar-container">
+                    <div class="loading-bar" id="loading-bar"></div>
+                </div>
+                <p class="loading-text" id="loading-text">Initializing...</p>
+            </div>
+        </div>
+
+        <!-- MAIN MENU -->
+        <div id="main-menu" class="screen">
+            <div class="menu-bg-overlay"></div>
+            <div class="menu-content">
+                <h1 class="game-title glitch" data-text="SHADOW STRIKE">SHADOW STRIKE</h1>
+                <p class="subtitle">CITY DEFENDER</p>
+                <div class="menu-buttons">
+                    <button class="menu-btn primary" id="btn-play">
+                        <span class="btn-icon">▶</span> START MISSION
+                    </button>
+                    <button class="menu-btn" id="btn-shop">
+                        <span class="btn-icon"><svg viewBox="0 0 36 36" width="18" height="18"><rect x="4" y="12" width="22" height="7" rx="1.5" fill="#ccc"/><rect x="22" y="10" width="10" height="11" rx="2" fill="#aaa"/><rect x="16" y="19" width="6" height="10" rx="1" fill="#999"/></svg></span> ARMORY
+                    </button>
+                    <button class="menu-btn" id="btn-checkin">
+                        <span class="btn-icon"><svg viewBox="0 0 24 24" width="18" height="18"><rect x="3" y="6" width="18" height="16" rx="2" fill="#d4a030" stroke="#a07820" stroke-width="1"/><rect x="6" y="3" width="4" height="5" rx="1" fill="#a07820"/><rect x="14" y="3" width="4" height="5" rx="1" fill="#a07820"/><path d="M8 14 L11 17 L17 11" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span> DAILY CHECK-IN
+                    </button>
+                    <button class="menu-btn" id="btn-heroes">
+                        <span class="btn-icon"><svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="8" r="5" fill="#555"/><rect x="5" y="13" width="14" height="10" rx="3" fill="#444"/><circle cx="12" cy="8" r="3.5" fill="#c68642"/></svg></span> SELECT HERO
+                    </button>
+                    <button class="menu-btn" id="btn-settings">
+                        <span class="btn-icon"><svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="3" fill="#aaa"/><path d="M12 2 L14 5 L18 4 L17 8 L21 9 L19 12 L21 15 L17 16 L18 20 L14 19 L12 22 L10 19 L6 20 L7 16 L3 15 L5 12 L3 9 L7 8 L6 4 L10 5Z" fill="none" stroke="#aaa" stroke-width="1.2"/></svg></span> SETTINGS
+                    </button>
+                </div>
+                <div class="player-info-bar">
+                    <div class="info-item">
+                        <span class="coin-icon"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10" fill="#f4c430" stroke="#c9a020" stroke-width="1.5"/><circle cx="12" cy="12" r="7" fill="none" stroke="#c9a020" stroke-width=".8"/><text x="12" y="16" text-anchor="middle" fill="#8a6f10" font-weight="bold" font-size="10" font-family="Arial">$</text></svg></span>
+                        <span id="menu-coins">0</span>
+                    </div>
+                    <div class="info-item">
+                        <span><svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 2 L22 6 L22 12 C22 18 12 22 12 22 C12 22 2 18 2 12 L2 6Z" fill="#38a" stroke="#2a7" stroke-width="1"/><path d="M12 6 L17 8 L17 12 C17 16 12 18 12 18 C12 18 7 16 7 12 L7 8Z" fill="#4ac"/></svg></span>
+                        <span>Level: <span id="menu-level">1</span></span>
+                    </div>
+                    <div class="info-item">
+                        <span><svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="8" r="5" fill="#555"/><rect x="5" y="13" width="14" height="10" rx="3" fill="#444"/><circle cx="12" cy="8" r="3.5" fill="#c68642"/></svg></span>
+                        <span id="menu-hero">—</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HERO SELECT -->
+        <div id="hero-select" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" id="btn-hero-back">← BACK</button>
+                <h2>SELECT YOUR HERO</h2>
+            </div>
+            <div class="hero-cards" id="hero-cards"></div>
+        </div>
+
+        <!-- LEVEL SELECT -->
+        <div id="level-select" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" id="btn-level-back">← BACK</button>
+                <h2>SELECT MISSION</h2>
+                <div class="difficulty-tabs">
+                    <button class="diff-tab active" data-diff="easy">EASY (1-10)</button>
+                    <button class="diff-tab" data-diff="medium">MEDIUM (11-20)</button>
+                    <button class="diff-tab" data-diff="hard">HARD (21-30)</button>
+                </div>
+            </div>
+            <div class="levels-grid" id="levels-grid"></div>
+        </div>
+
+        <!-- SHOP -->
+        <div id="shop-screen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" id="btn-shop-back">← BACK</button>
+                <h2>ARMORY</h2>
+                <div class="shop-coins">🪙 <span id="shop-coins">0</span></div>
+            </div>
+            <div class="shop-content" id="shop-content"></div>
+        </div>
+
+        <!-- DAILY CHECK-IN -->
+        <div id="checkin-screen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" id="btn-checkin-back">← BACK</button>
+                <h2>DAILY CHECK-IN</h2>
+            </div>
+            <div class="checkin-content" id="checkin-content"></div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div id="settings-screen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" id="btn-settings-back">← BACK</button>
+                <h2>SETTINGS</h2>
+            </div>
+            <div class="settings-content">
+                <div class="setting-row">
+                    <label>Music Volume</label>
+                    <input type="range" id="music-vol" min="0" max="100" value="50">
+                </div>
+                <div class="setting-row">
+                    <label>SFX Volume</label>
+                    <input type="range" id="sfx-vol" min="0" max="100" value="70">
+                </div>
+                <div class="setting-row">
+                    <label>Show FPS</label>
+                    <input type="checkbox" id="show-fps">
+                </div>
+                <div class="setting-row danger">
+                    <button class="menu-btn danger-btn" id="btn-reset">🗑 RESET ALL DATA</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- GAME CANVAS -->
+        <div id="game-screen" class="screen">
+            <canvas id="game-canvas"></canvas>
+            <!-- HUD -->
+            <div id="hud">
+                <div id="hud-top-left">
+                    <div class="hud-health">
+                        <div class="health-bar-bg">
+                            <div class="health-bar-fill" id="health-bar"></div>
+                        </div>
+                        <span id="health-text">100</span>
+                    </div>
+                    <div class="hud-ammo">
+                        <span id="ammo-text">30 / 30</span>
+                        <span class="ammo-label">AMMO</span>
+                    </div>
+                    <div class="hud-bombs">
+                        <svg class="bomb-icon" viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="14" r="8" fill="#444" stroke="#888" stroke-width="1.2"/><rect x="10" y="3" width="4" height="5" rx="1" fill="#666"/><line x1="12" y1="2" x2="14" y2="0" stroke="#f80" stroke-width="1.5" stroke-linecap="round"/><circle cx="14" cy="0" r="1.5" fill="#fa0"/></svg>
+                        <span id="bomb-count">0</span>
+                        <span class="bomb-hint">[G] throw</span>
+                    </div>
+                </div>
+                <div id="hud-top-center">
+                    <div class="wave-info">
+                        <span id="wave-text">WAVE 1</span>
+                        <span id="enemies-left">Enemies: 0</span>
+                    </div>
+                </div>
+                <div id="hud-top-right">
+                    <div class="hud-score">
+                        <span>SCORE</span>
+                        <span id="score-text">0</span>
+                    </div>
+                    <div class="hud-coins-game">
+                        <span>🪙</span>
+                        <span id="game-coins">0</span>
+                    </div>
+                </div>
+                <div id="hud-camera">
+                    <button class="cam-btn" id="btn-cam-tps">3RD PERSON</button>
+                    <button class="cam-btn" id="btn-cam-fps">1ST PERSON</button>
+                    <button class="cam-btn" id="btn-cam-top">TOP DOWN</button>
+                    <span class="cam-hint">[V] cycle</span>
+                </div>
+                <div id="hud-weapon">
+                    <span id="weapon-name">Pistol</span>
+                </div>
+                <div id="hud-bottom-info">
+                    <span id="kill-feed"></span>
+                </div>
+                <!-- Controls hint -->
+                <div id="controls-hint">
+                    <span>WAD/↑↓←→ Move</span>
+                    <span>Mouse Aim</span>
+                    <span>Click/S Shoot</span>
+                    <span>R Reload</span>
+                    <span>G Bomb</span>
+                    <span>V Camera</span>
+                    <span>RightClick Scope</span>
+                </div>
+                <!-- Collapsible Kill List -->
+                <div id="kill-list-panel">
+                    <div id="kill-list-header" onclick="document.getElementById('kill-list-body').classList.toggle('collapsed')">
+                        ☠ KILL LOG <span id="kill-count-badge">0</span>
+                        <span class="toggle-arrow">▼</span>
+                    </div>
+                    <div id="kill-list-body" class="collapsed"></div>
+                </div>
+                <canvas id="minimap-canvas"></canvas>
+                <div id="crosshair">
+                    <div class="scope-ring scope-outer"></div>
+                    <div class="scope-ring scope-inner"></div>
+                    <div class="scope-line scope-h"></div>
+                    <div class="scope-line scope-v"></div>
+                    <div class="scope-dot"></div>
+                    <div class="scope-tick scope-tick-t"></div>
+                    <div class="scope-tick scope-tick-b"></div>
+                    <div class="scope-tick scope-tick-l"></div>
+                    <div class="scope-tick scope-tick-r"></div>
+                </div>
+                <!-- Scope zoom overlay (right-click) -->
+                <div id="scope-overlay" class="hidden">
+                    <div class="scope-vignette"></div>
+                    <div class="scope-zoom-ring"></div>
+                    <div class="scope-zoom-cross-h"></div>
+                    <div class="scope-zoom-cross-v"></div>
+                    <div class="scope-zoom-dot"></div>
+                    <div class="scope-zoom-info" id="scope-zoom-text">2x ZOOM</div>
+                </div>
+                <div id="damage-overlay"></div>
+                <div id="combo-display" class="hidden"></div>
+                <div id="fps-counter" class="hidden"></div>
+                <div id="reload-indicator" class="hidden">RELOADING...</div>
+
+                <!-- MOBILE TOUCH CONTROLS -->
+                <div id="mobile-controls">
+                    <div id="joystick-zone">
+                        <div id="joystick-base">
+                            <div id="joystick-thumb"></div>
+                        </div>
+                    </div>
+                    <div id="mobile-action-buttons">
+                        <button class="mobile-btn" id="btn-mobile-shoot">
+                            <svg viewBox="0 0 36 36" width="24" height="24"><circle cx="18" cy="18" r="4" fill="#f44"/><circle cx="18" cy="18" r="12" fill="none" stroke="#f44" stroke-width="2"/><line x1="18" y1="2" x2="18" y2="10" stroke="#f44" stroke-width="2"/><line x1="18" y1="26" x2="18" y2="34" stroke="#f44" stroke-width="2"/><line x1="2" y1="18" x2="10" y2="18" stroke="#f44" stroke-width="2"/><line x1="26" y1="18" x2="34" y2="18" stroke="#f44" stroke-width="2"/></svg>
+                        </button>
+                        <button class="mobile-btn small" id="btn-mobile-bomb">
+                            <svg viewBox="0 0 36 36" width="20" height="20"><circle cx="18" cy="20" r="9" fill="#555"/><rect x="16" y="7" width="4" height="6" rx="1.5" fill="#666"/><line x1="18" y1="5" x2="21" y2="2" stroke="#f80" stroke-width="2" stroke-linecap="round"/><circle cx="21.5" cy="1.5" r="2" fill="#fa0"/></svg>
+                        </button>
+                        <button class="mobile-btn small" id="btn-mobile-reload">
+                            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 4 A8 8 0 1 1 4 12" fill="none" stroke="#0ff" stroke-width="2.5" stroke-linecap="round"/><polygon points="12,1 15,5 9,5" fill="#0ff"/></svg>
+                        </button>
+                        <button class="mobile-btn small" id="btn-mobile-scope">
+                            <svg viewBox="0 0 24 24" width="18" height="18"><circle cx="10" cy="10" r="7" fill="none" stroke="#0f0" stroke-width="2"/><line x1="15" y1="15" x2="22" y2="22" stroke="#0f0" stroke-width="2.5" stroke-linecap="round"/></svg>
+                        </button>
+                        <button class="mobile-btn mini" id="btn-mobile-pause">
+                            <svg viewBox="0 0 24 24" width="16" height="16"><rect x="5" y="4" width="5" height="16" rx="1" fill="#aaa"/><rect x="14" y="4" width="5" height="16" rx="1" fill="#aaa"/></svg>
+                        </button>
+                    </div>
+                    <div id="mobile-aim-zone"></div>
+                </div>
+            </div>
+            <!-- PAUSE MENU -->
+            <div id="pause-menu" class="hidden">
+                <h2>PAUSED</h2>
+                <button class="menu-btn" id="btn-resume">▶ RESUME</button>
+                <button class="menu-btn" id="btn-quit-game">✕ QUIT TO MENU</button>
+            </div>
+            <!-- LEVEL COMPLETE -->
+            <div id="level-complete" class="hidden">
+                <h2>MISSION COMPLETE!</h2>
+                <div class="results" id="results-content"></div>
+                <button class="menu-btn primary" id="btn-next-level">NEXT MISSION →</button>
+                <button class="menu-btn" id="btn-back-menu">BACK TO MENU</button>
+            </div>
+            <!-- GAME OVER -->
+            <div id="game-over" class="hidden">
+                <h2 class="game-over-title">MISSION FAILED</h2>
+                <p id="game-over-msg"></p>
+                <button class="menu-btn primary" id="btn-retry">↻ RETRY</button>
+                <button class="menu-btn" id="btn-go-menu">BACK TO MENU</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="audio.js"></script>
+    <script src="game.js"></script>
+    <script src="ui.js"></script>
+</body>
+</html>
