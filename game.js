@@ -1526,6 +1526,7 @@ class Game {
         this.map = null;
         this.score = 0;
         this.kills = 0;
+        this.totalSpawned = 0;
         this.waveDelay = 0;
         this.gameTime = 0;
         this.coinsEarned = 0;
@@ -1653,6 +1654,7 @@ class Game {
         this.killedEnemies = [];
         this.wave = 0;
         this.waveDelay = 0;
+        this.totalSpawned = 0;
         this.gameTime = 0;
         this.coinsEarned = 0;
         this.paused = false;
@@ -1975,6 +1977,7 @@ class Game {
         if (this.wave > this.currentLevel.waves) { this.levelComplete(); return; }
         const lvl = this.currentLevel;
         const count = lvl.enemiesPerWave + Math.floor(this.wave * 1.5);
+        this.totalSpawned += count;
         for (let i = 0; i < count; i++) {
             const spawn = this.map.getEnemySpawn(this.player.x, this.player.z);
             this.enemies.push(new Enemy3D(this.scene, spawn.x, spawn.z, lvl.num,
@@ -2409,7 +2412,7 @@ class Game {
         let feedMsg = `${icon('skull', 14)} ${enemy.name} eliminated`;
         if (this.comboCount >= 3) feedMsg += ` — ${this.comboCount}x COMBO!`;
         else if (this.comboCount === 2) feedMsg += ' — DOUBLE KILL!';
-        feed.textContent = feedMsg;
+        feed.innerHTML = feedMsg;
         feed.classList.add('show');
         setTimeout(() => feed.classList.remove('show'), 2500);
 
@@ -2578,7 +2581,7 @@ class Game {
         document.getElementById('ammo-text').textContent = `${this.player.ammo} / ${w.magSize}`;
         document.getElementById('wave-text').textContent = `WAVE ${this.wave} / ${this.currentLevel.waves}`;
         const aliveCount = this.enemies.filter(e => e.alive).length;
-        document.getElementById('enemies-left').textContent = `Enemies: ${aliveCount} / ${this.kills + aliveCount}`;
+        document.getElementById('enemies-left').textContent = `Enemies: ${aliveCount} / ${this.totalSpawned}`;
         document.getElementById('enemies-left').style.color = aliveCount <= 2 ? '#ff2244' : aliveCount <= 5 ? '#ffaa00' : '#00f0ff';
         document.getElementById('score-text').textContent = this.score;
         document.getElementById('game-coins').textContent = this.coinsEarned;
