@@ -1376,10 +1376,23 @@ class Player3D {
         if (this.keys.arrowdown) mz += 1;
         if (this.keys.a || this.keys.arrowleft) mx -= 1;
         if (this.keys.d || this.keys.arrowright) mx += 1;
-        if (mx !== 0 || mz !== 0) {
+
+        const isMoving = (mx !== 0 || mz !== 0);
+
+        if (isMoving) {
             const len = Math.sqrt(mx * mx + mz * mz);
-            mx = (mx / len) * this.speed * dtScale;
-            mz = (mz / len) * this.speed * dtScale;
+            mx /= len;
+            mz /= len;
+
+            // Rotate movement input relative to current aim direction
+            // so Left/Right move relative to camera, not world
+            const sinA = Math.sin(aimAngle);
+            const cosA = Math.cos(aimAngle);
+            const relX = mx * cosA - mz * sinA;
+            const relZ = mx * sinA + mz * cosA;
+
+            mx = relX * this.speed * dtScale;
+            mz = relZ * this.speed * dtScale;
         }
 
         const newX = this.x + mx;
@@ -1391,18 +1404,8 @@ class Player3D {
         this.x = Math.max(-half, Math.min(half, this.x));
         this.z = Math.max(-half, Math.min(half, this.z));
 
-        // Smooth angle transition — fast lerp for responsive aiming
-        let angleDiff = aimAngle - this.angle;
-        // Normalize to [-PI, PI]
-        angleDiff = ((angleDiff + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
-        // Fast lerp: 40% per frame at 60fps — snappy but smooth
-        const lerpFactor = Math.min(0.4 * dtScale, 1);
-        // Snap if very close to avoid tiny oscillations
-        if (Math.abs(angleDiff) < 0.01) {
-            this.angle = aimAngle;
-        } else {
-            this.angle += angleDiff * lerpFactor;
-        }
+        // Hero always faces aim direction — no lerp delay for tight gun focus
+        this.angle = aimAngle;
         // Keep angle in [-PI, PI] range to avoid drift
         this.angle = ((this.angle + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
 
@@ -1533,6 +1536,8 @@ class Game {
         this.cameraMode = 'tps'; // 'tps', 'fps', 'top'
         this.mouseX = 0;
         this.mouseY = 0;
+        this._rawMouseX = window.innerWidth / 2;
+        this._rawMouseY = window.innerHeight / 2;
         this.aimAngle = 0;
 
         // Scope zoom
@@ -1727,11 +1732,14 @@ class Game {
             if (k === 's' || k === 'f') this.player.shooting = false;
         };
         this._onMouseMove = (e) => {
-            this.mouseX = (e.clientX / window.innerWidth) * 2 - 1;
-            this.mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
-            const ch = document.getElementById('crosshair');
-            ch.style.left = e.clientX + 'px';
-            ch.style.top = e.clientY + 'px';
+            // Smooth mouse position — prevents micro-jitter from high-DPI mice
+            const targetMX = (e.clientX / window.innerWidth) * 2 - 1;
+            const targetMY = -(e.clientY / window.innerHeight) * 2 + 1;
+            // Light smoothing: 70% new + 30% old
+            this.mouseX = this.mouseX * 0.3 + targetMX * 0.7;
+            this.mouseY = this.mouseY * 0.3 + targetMY * 0.7;
+            this._rawMouseX = e.clientX;
+            this._rawMouseY = e.clientY;
         };
         this._onMouseDown = (e) => {
             if (e.button === 0) this.player.shooting = true;
@@ -1776,9 +1784,8 @@ class Game {
         const baseRect = () => joystickBase.getBoundingClientRect();
         const baseRadius = 60;
         const thumbRadius = 23;
-        const deadZone = 8;
 
-        // --- JOYSTICK ---
+        // --- JOYSTICK: movement + auto-rotate toward movement ---
         const onJoystickMove = (cx, cy) => {
             const r = baseRect();
             const centerX = r.left + r.width / 2;
@@ -1791,17 +1798,31 @@ class Game {
             joystickThumb.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
             joystickThumb.classList.add('active');
 
-            // Map to player keys
             const normX = dx / maxDist;
             const normY = dy / maxDist;
-            this.player.keys.arrowleft = normX < -0.3;
-            this.player.keys.arrowright = normX > 0.3;
-            this.player.keys.arrowup = normY < -0.3;   // Up on screen = forward
-            this.player.keys.arrowdown = normY > 0.3;
-            // Also set W/A/D for movement calc
-            this.player.keys.a = normX < -0.3;
-            this.player.keys.d = normX > 0.3;
-            this.player.keys.w = normY < -0.3;
+            const deadZone = 0.25;
+
+            // Set movement keys
+            this.player.keys.arrowleft = normX < -deadZone;
+            this.player.keys.arrowright = normX > deadZone;
+            this.player.keys.arrowup = normY < -deadZone;
+            this.player.keys.arrowdown = normY > deadZone;
+            this.player.keys.a = normX < -deadZone;
+            this.player.keys.d = normX > deadZone;
+            this.player.keys.w = normY < -deadZone;
+
+            // Auto-rotate aim toward joystick direction when no aim touch active
+            if (this._aimTouchId === null && (Math.abs(normX) > deadZone || Math.abs(normY) > deadZone)) {
+                // Convert joystick direction to world angle relative to current aim
+                // Screen up (-Y) = forward along aimAngle, screen right (+X) = right of aimAngle
+                const moveAngle = Math.atan2(normX, -normY); // screen coords to angle
+                const worldAngle = this.aimAngle + moveAngle;
+                // Lerp aim toward movement direction
+                let diff = worldAngle - this.aimAngle;
+                diff = ((diff + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+                this.aimAngle += diff * 0.15;
+                this.aimAngle = ((this.aimAngle + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+            }
         };
 
         const resetJoystick = () => {
@@ -1847,7 +1868,7 @@ class Game {
             }
         });
 
-        // --- AIM ZONE (drag to aim) ---
+        // --- AIM: drag anywhere on screen to rotate (fullscreen catch-all) ---
         aimZone.addEventListener('touchstart', (e) => {
             e.preventDefault();
             if (this._aimTouchId !== null) return;
@@ -1862,7 +1883,8 @@ class Game {
             for (const t of e.changedTouches) {
                 if (t.identifier === this._aimTouchId) {
                     const dx = t.clientX - this._lastAimX;
-                    const sensitivity = 0.006;
+                    // Higher sensitivity for responsive aiming
+                    const sensitivity = 0.012;
                     this.aimAngle -= dx * sensitivity;
                     this.aimAngle = ((this.aimAngle + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
                     this._lastAimX = t.clientX;
@@ -2018,20 +2040,35 @@ class Game {
             if (this.raycaster.ray.intersectPlane(this.groundPlane, intersection)) {
                 const dx = intersection.x - this.player.x;
                 const dz = intersection.z - this.player.z;
-                this.aimAngle = Math.atan2(dx, dz);
+                // Only update if cursor is far enough from player to get stable angle
+                if (dx * dx + dz * dz > 0.5) {
+                    const rawAngle = Math.atan2(dx, dz);
+                    // Smooth the aim angle — prevents jittery snapping
+                    let diff = rawAngle - this.aimAngle;
+                    diff = ((diff + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+                    if (Math.abs(diff) < 0.005) {
+                        this.aimAngle = rawAngle;
+                    } else {
+                        this.aimAngle += diff * 0.5; // 50% lerp — responsive but smooth
+                    }
+                }
+            }
+            // Update crosshair position smoothly
+            const ch = document.getElementById('crosshair');
+            if (ch && this._rawMouseX !== undefined) {
+                ch.style.left = this._rawMouseX + 'px';
+                ch.style.top = this._rawMouseY + 'px';
             }
         }
 
         // Normalize aimAngle to [-PI, PI]
         this.aimAngle = ((this.aimAngle + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
 
-        // Auto-aim assist: snap to nearest enemy when moving (or always on mobile)
+        // Auto-aim: lock onto nearest visible enemy
         const p = this.player;
         const moving = p.keys.w || p.keys.a || p.keys.d || p.keys.arrowup || p.keys.arrowdown || p.keys.arrowleft || p.keys.arrowright;
-        const autoAimActive = this.isMobile || moving;
-        const aimCone = this.isMobile ? 0.5 : 0.75; // wider cone on mobile (~60° vs ~40°)
-        const aimLerp = this.isMobile ? 0.2 : 0.12;  // stronger assist on mobile
-        if (autoAimActive && this.enemies.length > 0) {
+
+        if (this.enemies.length > 0) {
             let bestEnemy = null;
             let bestScore = Infinity;
             const aimDir = new THREE.Vector2(Math.sin(this.aimAngle), Math.cos(this.aimAngle)).normalize();
@@ -2041,16 +2078,15 @@ class Game {
                 const ex = e.x - p.x;
                 const ez = e.z - p.z;
                 const dist = Math.sqrt(ex * ex + ez * ez);
-                if (dist > 30 || dist < 1) continue; // too far or too close
+                if (dist > 30 || dist < 1) continue;
 
-                // Direction from player to enemy
                 const toEnemy = new THREE.Vector2(ex / dist, ez / dist);
-                // Dot product: how aligned is enemy with our aim direction
                 const dot = aimDir.dot(toEnemy);
 
-                // Only assist if enemy is roughly in aim direction (within ~40°)
-                if (dot > aimCone) {
-                    // Score: prefer closer enemies that are more aligned
+                // Wider cone when moving (120°), normal cone when still (80°)
+                const cone = moving ? 0.0 : 0.5;
+                if (dot > cone) {
+                    // Strongly prefer closer + aligned enemies
                     const score = dist * (2 - dot);
                     if (score < bestScore) {
                         bestScore = score;
@@ -2063,8 +2099,9 @@ class Game {
                 const targetAngle = Math.atan2(bestEnemy.x - p.x, bestEnemy.z - p.z);
                 let diff = targetAngle - this.aimAngle;
                 diff = ((diff + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
-                this.aimAngle += diff * aimLerp;
-                // Keep normalized
+                // Stronger lerp when moving — snaps gun toward enemy quickly
+                const lerpStr = moving ? 0.25 : (this.isMobile ? 0.2 : 0.1);
+                this.aimAngle += diff * lerpStr;
                 this.aimAngle = ((this.aimAngle + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
             }
         }
@@ -2106,8 +2143,8 @@ class Game {
             const camHeight = zoomed ? 3.5 : 6;
             const targetX = p.x - Math.sin(p.angle) * camDist;
             const targetZ = p.z - Math.cos(p.angle) * camDist;
-            const lerpSpeed = zoomed ? 0.12 : 0.06;
-            // Smooth camera follow — no jitter
+            // Faster lerp reduces aim-camera feedback jitter
+            const lerpSpeed = zoomed ? 0.18 : 0.12;
             this.camera.position.x += (targetX - this.camera.position.x) * lerpSpeed;
             this.camera.position.y += (camHeight - this.camera.position.y) * lerpSpeed;
             this.camera.position.z += (targetZ - this.camera.position.z) * lerpSpeed;
@@ -2119,7 +2156,7 @@ class Game {
             this.camera.lookAt(fwdX, 1.4, fwdZ);
         } else if (this.cameraMode === 'top') {
             const topHeight = zoomed ? 15 : 25;
-            const lerpSpeed = 0.06;
+            const lerpSpeed = 0.12;
             this.camera.position.x += (p.x - this.camera.position.x) * lerpSpeed;
             this.camera.position.y += (topHeight - this.camera.position.y) * lerpSpeed;
             this.camera.position.z += ((p.z + 5) - this.camera.position.z) * lerpSpeed;
@@ -2168,16 +2205,8 @@ class Game {
         }
 
         // Screen shake decay
-        if (this._shakeIntensity > 0) {
-            this._shakeIntensity *= 0.9;
-            if (this._shakeIntensity < 0.01) this._shakeIntensity = 0;
-            const shakeX = (Math.random() - 0.5) * this._shakeIntensity;
-            const shakeY = (Math.random() - 0.5) * this._shakeIntensity;
-            this.camera.position.x += shakeX;
-            this.camera.position.y += shakeY;
-        }
 
-        // Aim
+        // Aim — uses current camera position for raycast
         this.updateAim();
 
         // Crosshair enemy detection — highlight when aimed at enemy
@@ -2186,8 +2215,16 @@ class Game {
         // Update player
         this.player.update(this.map, dt, this.bullets, this.aimAngle);
 
-        // Camera
+        // Camera follows player — single update per frame
         this.updateCamera();
+
+        // Screen shake — cosmetic offset AFTER final camera position
+        if (this._shakeIntensity > 0) {
+            this._shakeIntensity *= 0.9;
+            if (this._shakeIntensity < 0.01) this._shakeIntensity = 0;
+            this.camera.position.x += (Math.random() - 0.5) * this._shakeIntensity;
+            this.camera.position.y += (Math.random() - 0.5) * this._shakeIntensity;
+        }
 
         // Enemies
         for (const e of this.enemies) {
