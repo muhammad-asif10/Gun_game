@@ -43,6 +43,9 @@
                     <button class="menu-btn" id="btn-heroes">
                         <span class="btn-icon"><svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="8" r="5" fill="#555"/><rect x="5" y="13" width="14" height="10" rx="3" fill="#444"/><circle cx="12" cy="8" r="3.5" fill="#c68642"/></svg></span> SELECT HERO
                     </button>
+                    <button class="menu-btn" id="btn-themes">
+                        <span class="btn-icon">🌍</span> ENVIRONMENT
+                    </button>
                     <button class="menu-btn" id="btn-settings">
                         <span class="btn-icon"><svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="3" fill="#aaa"/><path d="M12 2 L14 5 L18 4 L17 8 L21 9 L19 12 L21 15 L17 16 L18 20 L14 19 L12 22 L10 19 L6 20 L7 16 L3 15 L5 12 L3 9 L7 8 L6 4 L10 5Z" fill="none" stroke="#aaa" stroke-width="1.2"/></svg></span> SETTINGS
                     </button>
@@ -71,6 +74,15 @@
                 <h2>SELECT YOUR HERO</h2>
             </div>
             <div class="hero-cards" id="hero-cards"></div>
+        </div>
+
+        <!-- THEME SELECT -->
+        <div id="theme-select" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" id="btn-theme-back">← BACK</button>
+                <h2>SELECT ENVIRONMENT</h2>
+            </div>
+            <div class="theme-cards" id="theme-cards"></div>
         </div>
 
         <!-- LEVEL SELECT -->
@@ -183,9 +195,9 @@
                 </div>
                 <!-- Controls hint -->
                 <div id="controls-hint">
-                    <span>WAD/↑↓←→ Move</span>
+                    <span>WASD/↑↓←→ Move</span>
                     <span>Mouse Aim</span>
-                    <span>Click/S Shoot</span>
+                    <span>Click/F Shoot</span>
                     <span>R Reload</span>
                     <span>G Bomb</span>
                     <span>V Camera</span>

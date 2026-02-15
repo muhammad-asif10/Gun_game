@@ -420,6 +420,67 @@ body {
     transition: width 0.5s;
 }
 
+/* ===== THEME SELECT ===== */
+.theme-cards {
+    display: flex;
+    gap: 30px;
+    margin-top: 80px;
+    padding: 40px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.theme-card {
+    width: 220px;
+    background: var(--bg-card);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 25px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+.theme-card:hover, .theme-card.selected {
+    border-color: var(--accent);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 40px rgba(0,240,255,0.15);
+}
+.theme-card.selected::after {
+    content: '✓ SELECTED';
+    position: absolute;
+    top: 10px; right: 10px;
+    background: var(--accent);
+    color: var(--bg-dark);
+    font-family: var(--font-title);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 10px;
+    letter-spacing: 1px;
+}
+.theme-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+.theme-name {
+    font-family: var(--font-title);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+.theme-preview {
+    display: flex;
+    gap: 3px;
+    justify-content: center;
+    margin-top: 12px;
+}
+.theme-swatch {
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
 /* ===== LEVEL SELECT ===== */
 .difficulty-tabs {
     display: flex;
@@ -491,6 +552,11 @@ body {
     letter-spacing: 1px;
     margin-top: 2px;
     color: var(--text-dim);
+}
+.level-card .level-bombs {
+    font-size: 10px;
+    color: #ff8800;
+    margin-top: 3px;
 }
 
 /* ===== SHOP ===== */
@@ -1224,6 +1290,8 @@ body {
     .menu-btn { width: 220px; font-size: 12px; padding: 10px 16px; }
     .hero-cards { flex-direction: column; gap: 14px; align-items: center; }
     .hero-card { width: 90%; max-width: 300px; }
+    .theme-cards { gap: 14px; }
+    .theme-card { width: 140px; padding: 15px; }
     .levels-grid { grid-template-columns: repeat(5, 1fr); padding: 80px 10px 10px; gap: 6px; }
     .checkin-grid { grid-template-columns: repeat(4, 1fr); }
     .player-info-bar { gap: 10px; font-size: 12px; flex-wrap: wrap; justify-content: center; }

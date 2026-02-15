@@ -129,22 +129,90 @@ const BOMB_SHOP = [
     { id: 'sticky', name: 'C4 Sticky Bomb',  icon: 'sticky', damage: 200, radius: 5,  cost: 350, desc: 'Massive damage, tight 5m radius' }
 ];
 
+// ===== ENVIRONMENT THEMES =====
+const THEMES = {
+    city: {
+        name: 'City', icon: '🏙️',
+        ground: 0x333333, road: 0x222222, roadLine: 0x555555,
+        sidewalk: 0x444444,
+        buildings: [0x2a3040, 0x303848, 0x283038, 0x3a3040, 0x2a2838, 0x384050, 0x303040],
+        windowLit: 0xffdd44, windowDark: 0x1a2a3a,
+        roofColor: 0x1a1a1a, lampPost: 0x555555, lampGlow: 0xffeeaa, lampLight: 0xffddaa,
+        trunkColor: 0x5a3a1a, foliageColor: 0x2a5a2a, treeCount: 40,
+        fogColor: 0x0a0a15, fogDensity: 0.012,
+        ambientColor: 0x303050, ambientIntensity: 0.6,
+        dirColor: 0xffeedd, dirIntensity: 0.5,
+        moonColor: 0x4466aa, moonIntensity: 0.3,
+        skyBottom: [0.04, 0.04, 0.08], skyTop: [0.02, 0.02, 0.12], starsEnabled: true
+    },
+    desert: {
+        name: 'Desert', icon: '🏜️',
+        ground: 0xc2a64e, road: 0x8a7a3a, roadLine: 0xa09050,
+        sidewalk: 0xb09840,
+        buildings: [0x9e8252, 0xb09060, 0xa08848, 0x8a7240, 0xc0a060, 0x907848, 0xb8a058],
+        windowLit: 0xffe880, windowDark: 0x5a4a2a,
+        roofColor: 0x6a5a30, lampPost: 0x8a7a50, lampGlow: 0xffeeaa, lampLight: 0xffddaa,
+        trunkColor: 0x6a4a1a, foliageColor: 0x5a8a2a, treeCount: 15,
+        fogColor: 0x8a7a50, fogDensity: 0.008,
+        ambientColor: 0x907850, ambientIntensity: 0.8,
+        dirColor: 0xffe4b0, dirIntensity: 0.9,
+        moonColor: 0xffd080, moonIntensity: 0.2,
+        skyBottom: [0.55, 0.42, 0.25], skyTop: [0.30, 0.50, 0.80], starsEnabled: false
+    },
+    snow: {
+        name: 'Snow', icon: '❄️',
+        ground: 0xd8dce8, road: 0x8090a0, roadLine: 0xb0b8c0,
+        sidewalk: 0xc0c8d0,
+        buildings: [0x506070, 0x5a6a7a, 0x485868, 0x607080, 0x4a5a6a, 0x6a7a8a, 0x586878],
+        windowLit: 0xffcc55, windowDark: 0x2a3a4a,
+        roofColor: 0xe0e8f0, lampPost: 0x7a8a9a, lampGlow: 0xffeedd, lampLight: 0xffeedd,
+        trunkColor: 0x3a2a1a, foliageColor: 0x1a4a2a, treeCount: 25,
+        fogColor: 0xb0b8c8, fogDensity: 0.015,
+        ambientColor: 0x8090b0, ambientIntensity: 0.7,
+        dirColor: 0xe8e8ff, dirIntensity: 0.6,
+        moonColor: 0x8899cc, moonIntensity: 0.4,
+        skyBottom: [0.60, 0.65, 0.75], skyTop: [0.35, 0.40, 0.55], starsEnabled: false
+    },
+    forest: {
+        name: 'Forest', icon: '🌲',
+        ground: 0x3a5a2a, road: 0x4a3a20, roadLine: 0x6a5a30,
+        sidewalk: 0x4a4a2a,
+        buildings: [0x3a3020, 0x4a4028, 0x2a2818, 0x5a4830, 0x3a3520, 0x4a3a28, 0x2a2a18],
+        windowLit: 0xffaa44, windowDark: 0x1a1a0a,
+        roofColor: 0x2a3a1a, lampPost: 0x4a3a2a, lampGlow: 0xffcc88, lampLight: 0xffcc88,
+        trunkColor: 0x4a2a10, foliageColor: 0x1a6a1a, treeCount: 80,
+        fogColor: 0x1a2a1a, fogDensity: 0.018,
+        ambientColor: 0x2a4a2a, ambientIntensity: 0.5,
+        dirColor: 0xccffaa, dirIntensity: 0.4,
+        moonColor: 0x336633, moonIntensity: 0.3,
+        skyBottom: [0.05, 0.12, 0.05], skyTop: [0.02, 0.06, 0.02], starsEnabled: true
+    }
+};
+
 function generateLevels() {
     const levels = [];
     for (let i = 1; i <= 30; i++) {
-        let diff, diffLabel;
-        if (i <= 10) { diff = 'easy'; diffLabel = 'EASY'; }
-        else if (i <= 20) { diff = 'medium'; diffLabel = 'MEDIUM'; }
-        else { diff = 'hard'; diffLabel = 'HARD'; }
-        const waveCount = Math.min(2 + Math.floor(i / 3), 8);
-        const baseEnemies = 3 + Math.floor(i * 1.2);
+        let diff, diffLabel, bombs;
+        if (i <= 10) {
+            diff = 'easy'; diffLabel = 'EASY';
+            bombs = { frag: 3 + Math.floor(i / 3), fire: 1, flash: 2, sticky: 0 };
+        } else if (i <= 20) {
+            diff = 'medium'; diffLabel = 'MEDIUM';
+            bombs = { frag: 2 + Math.floor(i / 5), fire: 1 + Math.floor(i / 7), flash: 1, sticky: 1 };
+        } else {
+            diff = 'hard'; diffLabel = 'HARD';
+            bombs = { frag: 2, fire: 2, flash: 1, sticky: 1 + Math.floor((i - 20) / 5) };
+        }
+        const waveCount = Math.min(2 + Math.floor(i / 4), 6);
+        const baseEnemies = 2 + Math.floor(i * 0.7);
         levels.push({
             num: i, difficulty: diff, diffLabel, waves: waveCount,
             enemiesPerWave: baseEnemies,
-            enemyHpMult: 1 + (i - 1) * 0.12,
-            enemyDmgMult: 1 + (i - 1) * 0.08,
-            enemySpeedMult: 1 + (i - 1) * 0.03,
+            enemyHpMult: 1 + (i - 1) * 0.06,
+            enemyDmgMult: 1 + (i - 1) * 0.04,
+            enemySpeedMult: 1 + (i - 1) * 0.015,
             coinReward: 50 + i * 20,
+            bombs: bombs,
             name: `Mission ${i}`
         });
     }
@@ -159,7 +227,7 @@ class GameState {
         return {
             coins: 200, selectedHero: 'hussnain', equippedWeapon: 'pistol',
             ownedWeapons: { pistol: { level: 1 } }, levelsCompleted: {},
-            maxLevelUnlocked: 1,
+            maxLevelUnlocked: 1, selectedTheme: 'city',
             bombs: { frag: 3, fire: 0, flash: 1, sticky: 0 },
             equippedBomb: 'frag',
             checkin: { lastDate: null, streak: 0, history: [] },
@@ -188,6 +256,9 @@ class GameState {
     get coins() { return this.data.coins; }
     set coins(v) { this.data.coins = v; this.save(); }
     get hero() { return HEROES.find(h => h.id === this.data.selectedHero); }
+    get theme() { return THEMES[this.data.selectedTheme] || THEMES.city; }
+    get themeId() { return this.data.selectedTheme || 'city'; }
+    selectTheme(id) { if (THEMES[id]) { this.data.selectedTheme = id; this.save(); } }
     get weapon() {
         const w = WEAPONS.find(w => w.id === this.data.equippedWeapon);
         const lvl = (this.data.ownedWeapons[w.id] || { level: 1 }).level;
@@ -626,6 +697,38 @@ class CharacterBuilder {
         requestAnimationFrame(tick);
     }
 
+    // Victory dance animation
+    static animateDance(group, dt) {
+        if (!group.userData.rightArm) return;
+        const dtScale = dt / 16.667;
+        group.userData.animTime += dtScale * 0.15;
+        const t = group.userData.animTime;
+        const danceCycle = t * 8;
+
+        // Arms pump up and wave
+        group.userData.rightArm.rotation.x = -2.5 + Math.sin(danceCycle) * 0.5;
+        group.userData.rightArm.rotation.z = 0.3 + Math.sin(danceCycle * 0.5) * 0.3;
+        group.userData.leftArm.rotation.x = -2.5 + Math.sin(danceCycle + Math.PI) * 0.5;
+        group.userData.leftArm.rotation.z = -0.3 - Math.sin(danceCycle * 0.5) * 0.3;
+
+        // Legs bounce and step
+        group.userData.rightLeg.rotation.x = Math.sin(danceCycle * 2) * 0.4;
+        group.userData.leftLeg.rotation.x = Math.sin(danceCycle * 2 + Math.PI) * 0.4;
+
+        // Body bounce
+        group.userData._bodyBob = Math.abs(Math.sin(danceCycle * 2)) * 0.12;
+
+        // Hip twist
+        group.rotation.y += Math.sin(danceCycle) * 0.02;
+
+        // Head bob
+        const head = group.children.find(c => c.isMesh && Math.abs(c.position.y - 1.65) < 0.1);
+        if (head) {
+            head.rotation.z = Math.sin(danceCycle * 2) * 0.1;
+            head.rotation.y = Math.sin(danceCycle) * 0.08;
+        }
+    }
+
     static createMuzzleFlash() {
         // Blocky muzzle flash — Minecraft style
         const group = new THREE.Group();
@@ -642,171 +745,536 @@ class CharacterBuilder {
 
 // ===== 3D CITY MAP =====
 class CityMap3D {
-    constructor(scene) {
+    constructor(scene, theme) {
         this.scene = scene;
         this.size = 120;
         this.buildings = [];
         this.buildingBoxes = [];
+        this.theme = theme || THEMES.city;
         this.generate();
     }
 
+    _addBox(x, z, w, d, h) {
+        this.buildingBoxes.push(new THREE.Box3(
+            new THREE.Vector3(x - w / 2 - 0.3, 0, z - d / 2 - 0.3),
+            new THREE.Vector3(x + w / 2 + 0.3, h, z + d / 2 + 0.3)
+        ));
+        this.buildings.push({ x, z, w, d, h });
+    }
+
     generate() {
-        const size = this.size;
+        const id = Object.keys(THEMES).find(k => THEMES[k] === this.theme) || 'city';
+        switch (id) {
+            case 'desert': this._genDesert(); break;
+            case 'snow':   this._genSnow(); break;
+            case 'forest': this._genForest(); break;
+            default:       this._genCity(); break;
+        }
+    }
 
-        // Ground plane
-        const groundGeo = new THREE.PlaneGeometry(size, size, 1, 1);
-        const groundMat = new THREE.MeshLambertMaterial({ color: 0x333333 });
-        const ground = new THREE.Mesh(groundGeo, groundMat);
-        ground.rotation.x = -Math.PI / 2;
-        ground.receiveShadow = true;
-        this.scene.add(ground);
-
-        // Road grid
-        const roadMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
-        const roadW = 4;
-        const blockSize = 16;
-        for (let i = -size / 2; i <= size / 2; i += blockSize) {
-            // Horizontal roads
-            const hRoad = new THREE.Mesh(new THREE.PlaneGeometry(size, roadW), roadMat);
-            hRoad.rotation.x = -Math.PI / 2;
-            hRoad.position.set(0, 0.01, i);
-            hRoad.receiveShadow = true;
-            this.scene.add(hRoad);
-            // Vertical roads
-            const vRoad = new THREE.Mesh(new THREE.PlaneGeometry(roadW, size), roadMat);
-            vRoad.rotation.x = -Math.PI / 2;
-            vRoad.position.set(i, 0.01, 0);
-            vRoad.receiveShadow = true;
-            this.scene.add(vRoad);
-
-            // Road markings (dashed line)
-            const lineMat = new THREE.MeshBasicMaterial({ color: 0x555555 });
-            for (let d = -size / 2; d < size / 2; d += 3) {
-                const line = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 1.2), lineMat);
-                line.rotation.x = -Math.PI / 2;
-                line.position.set(i, 0.02, d);
-                this.scene.add(line);
-                const line2 = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.15), lineMat);
-                line2.rotation.x = -Math.PI / 2;
-                line2.position.set(d, 0.02, i);
-                this.scene.add(line2);
+    // ==================== CITY ====================
+    _genCity() {
+        const S = this.size, t = this.theme, BS = 16;
+        // Ground
+        const ground = new THREE.Mesh(new THREE.PlaneGeometry(S, S), new THREE.MeshLambertMaterial({ color: t.ground }));
+        ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; this.scene.add(ground);
+        // Roads with markings
+        const roadMat = new THREE.MeshLambertMaterial({ color: t.road });
+        const lineMat = new THREE.MeshBasicMaterial({ color: t.roadLine });
+        for (let i = -S / 2; i <= S / 2; i += BS) {
+            const hr = new THREE.Mesh(new THREE.PlaneGeometry(S, 4), roadMat);
+            hr.rotation.x = -Math.PI / 2; hr.position.set(0, 0.01, i); hr.receiveShadow = true; this.scene.add(hr);
+            const vr = new THREE.Mesh(new THREE.PlaneGeometry(4, S), roadMat);
+            vr.rotation.x = -Math.PI / 2; vr.position.set(i, 0.01, 0); vr.receiveShadow = true; this.scene.add(vr);
+            for (let d = -S / 2; d < S / 2; d += 3) {
+                const l1 = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 1.2), lineMat);
+                l1.rotation.x = -Math.PI / 2; l1.position.set(i, 0.02, d); this.scene.add(l1);
+                const l2 = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.15), lineMat);
+                l2.rotation.x = -Math.PI / 2; l2.position.set(d, 0.02, i); this.scene.add(l2);
             }
         }
-
-        // Sidewalks
-        const sidewalkMat = new THREE.MeshLambertMaterial({ color: 0x444444 });
-
-        // Buildings
-        const buildingColors = [0x2a3040, 0x303848, 0x283038, 0x3a3040, 0x2a2838, 0x384050, 0x303040];
-        const windowColor = 0xffdd44;
-        const windowDarkColor = 0x1a2a3a;
-
-        for (let bx = -size / 2 + blockSize / 2; bx < size / 2; bx += blockSize) {
-            for (let bz = -size / 2 + blockSize / 2; bz < size / 2; bz += blockSize) {
-                // Multiple buildings per block
-                const numBuildings = 1 + Math.floor(Math.random() * 2);
-                for (let b = 0; b < numBuildings; b++) {
-                    if (Math.random() < 0.15) continue; // Some empty lots
-
-                    const w = 3 + Math.random() * 5;
-                    const d = 3 + Math.random() * 5;
-                    const h = 3 + Math.random() * 20;
-                    const ox = bx + (Math.random() - 0.5) * (blockSize - w - 5);
-                    const oz = bz + (Math.random() - 0.5) * (blockSize - d - 5);
-
-                    const color = buildingColors[Math.floor(Math.random() * buildingColors.length)];
-                    const geo = new THREE.BoxGeometry(w, h, d);
-                    const mat = new THREE.MeshLambertMaterial({ color });
-                    const building = new THREE.Mesh(geo, mat);
-                    building.position.set(ox, h / 2, oz);
-                    building.castShadow = true;
-                    building.receiveShadow = true;
-                    this.scene.add(building);
-
-                    // Windows on each face
-                    const winGeo = new THREE.PlaneGeometry(0.4, 0.6);
-                    const faces = [
-                        { axis: 'z', sign: 1, width: w, rot: 0 },
-                        { axis: 'z', sign: -1, width: w, rot: Math.PI },
-                        { axis: 'x', sign: 1, width: d, rot: Math.PI / 2 },
-                        { axis: 'x', sign: -1, width: d, rot: -Math.PI / 2 }
-                    ];
-                    faces.forEach(face => {
-                        const faceWidth = face.width;
-                        const faceDepth = face.axis === 'z' ? d : w;
-                        for (let wy = 2; wy < h - 1; wy += 1.8) {
-                            for (let wx = -faceWidth / 2 + 1; wx < faceWidth / 2 - 0.5; wx += 1.5) {
-                                const lit = Math.random() > 0.4;
-                                const winMat = new THREE.MeshBasicMaterial({
-                                    color: lit ? windowColor : windowDarkColor,
-                                    transparent: true,
-                                    opacity: lit ? 0.7 : 0.9
-                                });
-                                const win = new THREE.Mesh(winGeo, winMat);
-                                if (face.axis === 'z') {
-                                    win.position.set(ox + wx, wy, oz + face.sign * (faceDepth / 2 + 0.01));
-                                } else {
-                                    win.position.set(ox + face.sign * (faceWidth / 2 + 0.01), wy, oz + wx);
-                                    win.rotation.y = face.rot;
-                                }
-                                this.scene.add(win);
-                            }
+        // Skyscrapers with windows
+        const bC = t.buildings;
+        for (let bx = -S / 2 + BS / 2; bx < S / 2; bx += BS) {
+            for (let bz = -S / 2 + BS / 2; bz < S / 2; bz += BS) {
+                const n = 1 + Math.floor(Math.random() * 2);
+                for (let b = 0; b < n; b++) {
+                    if (Math.random() < 0.15) continue;
+                    const w = 3 + Math.random() * 5, d = 3 + Math.random() * 5, h = 3 + Math.random() * 20;
+                    const ox = bx + (Math.random() - 0.5) * (BS - w - 5);
+                    const oz = bz + (Math.random() - 0.5) * (BS - d - 5);
+                    const bld = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshLambertMaterial({ color: bC[Math.floor(Math.random() * bC.length)] }));
+                    bld.position.set(ox, h / 2, oz); bld.castShadow = true; bld.receiveShadow = true; this.scene.add(bld);
+                    // Windows
+                    const wg = new THREE.PlaneGeometry(0.4, 0.6);
+                    [{ a: 'z', s: 1, fw: w }, { a: 'z', s: -1, fw: w }, { a: 'x', s: 1, fw: d }, { a: 'x', s: -1, fw: d }].forEach(f => {
+                        const fd = f.a === 'z' ? d : w;
+                        for (let wy = 2; wy < h - 1; wy += 1.8) for (let wx = -f.fw / 2 + 1; wx < f.fw / 2 - 0.5; wx += 1.5) {
+                            const lit = Math.random() > 0.4;
+                            const wm = new THREE.MeshBasicMaterial({ color: lit ? t.windowLit : t.windowDark, transparent: true, opacity: lit ? 0.7 : 0.9 });
+                            const wi = new THREE.Mesh(wg, wm);
+                            if (f.a === 'z') wi.position.set(ox + wx, wy, oz + f.s * (fd / 2 + 0.01));
+                            else { wi.position.set(ox + f.s * (f.fw / 2 + 0.01), wy, oz + wx); wi.rotation.y = f.s > 0 ? Math.PI / 2 : -Math.PI / 2; }
+                            this.scene.add(wi);
                         }
                     });
-
-                    // Roof detail
-                    const roofGeo = new THREE.BoxGeometry(w * 0.3, 0.8, d * 0.3);
-                    const roofMat = new THREE.MeshLambertMaterial({ color: 0x1a1a1a });
-                    const roof = new THREE.Mesh(roofGeo, roofMat);
-                    roof.position.set(ox, h + 0.4, oz);
-                    this.scene.add(roof);
-
-                    // Collision box (slightly padded)
-                    const box = new THREE.Box3(
-                        new THREE.Vector3(ox - w / 2 - 0.3, 0, oz - d / 2 - 0.3),
-                        new THREE.Vector3(ox + w / 2 + 0.3, h, oz + d / 2 + 0.3)
-                    );
-                    this.buildingBoxes.push(box);
-                    this.buildings.push({ x: ox, z: oz, w, d, h });
+                    // Roof AC unit
+                    const roof = new THREE.Mesh(new THREE.BoxGeometry(w * 0.3, 0.8, d * 0.3), new THREE.MeshLambertMaterial({ color: t.roofColor }));
+                    roof.position.set(ox, h + 0.4, oz); this.scene.add(roof);
+                    this._addBox(ox, oz, w, d, h);
                 }
             }
         }
-
-        // Streetlights
-        const lightPostMat = new THREE.MeshLambertMaterial({ color: 0x555555 });
-        const lightGlowMat = new THREE.MeshBasicMaterial({ color: 0xffeeaa });
-        for (let x = -size / 2 + 4; x < size / 2; x += blockSize) {
-            for (let z = -size / 2 + 4; z < size / 2; z += blockSize) {
-                const post = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 4, 6), lightPostMat);
-                post.position.set(x, 2, z);
-                this.scene.add(post);
-                const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.15, 6, 6), lightGlowMat);
-                lamp.position.set(x, 4.1, z);
-                this.scene.add(lamp);
-                const pointLight = new THREE.PointLight(0xffddaa, 0.4, 12);
-                pointLight.position.set(x, 4, z);
-                this.scene.add(pointLight);
+        // Traffic lights at intersections
+        const tlMat = new THREE.MeshLambertMaterial({ color: 0x333333 });
+        for (let x = -S / 2; x <= S / 2; x += BS) {
+            for (let z = -S / 2; z <= S / 2; z += BS) {
+                if (Math.random() < 0.5) continue;
+                const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 4.5, 5), tlMat);
+                pole.position.set(x + 2.5, 2.25, z + 2.5); this.scene.add(pole);
+                const box = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.7, 0.15), tlMat);
+                box.position.set(x + 2.5, 4.6, z + 2.5); this.scene.add(box);
+                // Red, yellow, green lights
+                [0xff0000, 0xffaa00, 0x00ff00].forEach((c, i) => {
+                    const l = new THREE.Mesh(new THREE.SphereGeometry(0.06, 5, 5), new THREE.MeshBasicMaterial({ color: c }));
+                    l.position.set(x + 2.5, 4.85 - i * 0.22, z + 2.58); this.scene.add(l);
+                });
             }
         }
-
-        // Trees in some open areas
+        // Streetlights
+        const pMat = new THREE.MeshLambertMaterial({ color: t.lampPost });
+        const gMat = new THREE.MeshBasicMaterial({ color: t.lampGlow });
+        for (let x = -S / 2 + 4; x < S / 2; x += BS) for (let z = -S / 2 + 4; z < S / 2; z += BS) {
+            const p = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 4, 6), pMat); p.position.set(x, 2, z); this.scene.add(p);
+            const la = new THREE.Mesh(new THREE.SphereGeometry(0.15, 6, 6), gMat); la.position.set(x, 4.1, z); this.scene.add(la);
+            this.scene.add(Object.assign(new THREE.PointLight(t.lampLight, 0.4, 12), { position: new THREE.Vector3(x, 4, z) }));
+        }
+        // Parked cars
+        for (let i = 0; i < 20; i++) {
+            const cx = (Math.random() - 0.5) * S * 0.8, cz = (Math.random() - 0.5) * S * 0.8;
+            if (!this.isWalkable(cx, cz, 2)) continue;
+            const carColors = [0x882222, 0x2244aa, 0x228844, 0x888888, 0xdddddd, 0x222222];
+            const cc = carColors[Math.floor(Math.random() * carColors.length)];
+            const body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.6, 3.5), new THREE.MeshLambertMaterial({ color: cc }));
+            body.position.set(cx, 0.5, cz); body.rotation.y = Math.random() * Math.PI; body.castShadow = true; this.scene.add(body);
+            const top = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.5, 1.8), new THREE.MeshLambertMaterial({ color: cc }));
+            top.position.set(cx, 1.05, cz); top.rotation.y = body.rotation.y; this.scene.add(top);
+            // Windows
+            const cw = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.35, 1.75), new THREE.MeshBasicMaterial({ color: 0x334466, transparent: true, opacity: 0.6 }));
+            cw.position.set(cx, 1.1, cz); cw.rotation.y = body.rotation.y; this.scene.add(cw);
+            this._addBox(cx, cz, 2, 3.8, 1.3);
+        }
+        // Trees
         for (let i = 0; i < 40; i++) {
-            const tx = (Math.random() - 0.5) * size * 0.85;
-            const tz = (Math.random() - 0.5) * size * 0.85;
-            if (this.isWalkable(tx, tz, 1.5)) {
-                const trunkGeo = new THREE.CylinderGeometry(0.1, 0.15, 1.5, 6);
-                const trunkMat = new THREE.MeshLambertMaterial({ color: 0x5a3a1a });
-                const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-                trunk.position.set(tx, 0.75, tz);
-                trunk.castShadow = true;
-                this.scene.add(trunk);
-                const foliageGeo = new THREE.SphereGeometry(0.8 + Math.random() * 0.4, 6, 5);
-                const foliageMat = new THREE.MeshLambertMaterial({ color: 0x2a5a2a });
-                const foliage = new THREE.Mesh(foliageGeo, foliageMat);
-                foliage.position.set(tx, 2.2 + Math.random() * 0.3, tz);
-                foliage.castShadow = true;
-                this.scene.add(foliage);
+            const tx = (Math.random() - 0.5) * S * 0.85, tz = (Math.random() - 0.5) * S * 0.85;
+            if (!this.isWalkable(tx, tz, 1.5)) continue;
+            const tk = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.15, 1.5, 6), new THREE.MeshLambertMaterial({ color: t.trunkColor }));
+            tk.position.set(tx, 0.75, tz); tk.castShadow = true; this.scene.add(tk);
+            const fo = new THREE.Mesh(new THREE.SphereGeometry(0.8 + Math.random() * 0.4, 6, 5), new THREE.MeshLambertMaterial({ color: t.foliageColor }));
+            fo.position.set(tx, 2.2 + Math.random() * 0.3, tz); fo.castShadow = true; this.scene.add(fo);
+        }
+    }
+
+    // ==================== DESERT ====================
+    _genDesert() {
+        const S = this.size, t = this.theme, BS = 20;
+        // Sandy ground with bumps
+        const ground = new THREE.Mesh(new THREE.PlaneGeometry(S, S, 32, 32), new THREE.MeshLambertMaterial({ color: t.ground }));
+        ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true;
+        const gp = ground.geometry.attributes.position;
+        for (let i = 0; i < gp.count; i++) gp.setZ(i, Math.sin(gp.getX(i) * 0.3) * Math.cos(gp.getY(i) * 0.3) * 0.15);
+        gp.needsUpdate = true; ground.geometry.computeVertexNormals(); this.scene.add(ground);
+        // Dirt paths
+        const pathMat = new THREE.MeshLambertMaterial({ color: 0x9a8040 });
+        for (let i = -S / 2; i <= S / 2; i += BS) {
+            const h = new THREE.Mesh(new THREE.PlaneGeometry(S, 3), pathMat); h.rotation.x = -Math.PI / 2; h.position.set(0, 0.02, i); this.scene.add(h);
+            const v = new THREE.Mesh(new THREE.PlaneGeometry(3, S), pathMat); v.rotation.x = -Math.PI / 2; v.position.set(i, 0.02, 0); this.scene.add(v);
+        }
+        // Sand dunes
+        const duneMat = new THREE.MeshLambertMaterial({ color: 0xd4b85a });
+        for (let i = 0; i < 20; i++) {
+            const dx = (Math.random() - 0.5) * S * 0.8, dz = (Math.random() - 0.5) * S * 0.8;
+            const dw = 4 + Math.random() * 6, dh = 1 + Math.random() * 2;
+            const dune = new THREE.Mesh(new THREE.SphereGeometry(dw, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2), duneMat);
+            dune.scale.set(1, dh / dw, 1.2); dune.position.set(dx, 0, dz); dune.castShadow = true; this.scene.add(dune);
+            this._addBox(dx, dz, dw * 1.2, dw * 1.4, dh);
+        }
+        // Mud/stone huts with cone roofs
+        const hutWalls = [0x9e7a4a, 0xb08a50, 0x8a6a3a, 0xa07848];
+        for (let bx = -S / 2 + BS / 2; bx < S / 2; bx += BS) for (let bz = -S / 2 + BS / 2; bz < S / 2; bz += BS) {
+            if (Math.random() < 0.3) continue;
+            const n = 1 + Math.floor(Math.random() * 2);
+            for (let h = 0; h < n; h++) {
+                const r = 1.5 + Math.random() * 2, hh = 2 + Math.random() * 2;
+                const ox = bx + (Math.random() - 0.5) * 10, oz = bz + (Math.random() - 0.5) * 10;
+                const wall = new THREE.Mesh(new THREE.CylinderGeometry(r, r + 0.2, hh, 8), new THREE.MeshLambertMaterial({ color: hutWalls[Math.floor(Math.random() * hutWalls.length)] }));
+                wall.position.set(ox, hh / 2, oz); wall.castShadow = true; wall.receiveShadow = true; this.scene.add(wall);
+                const rH = 1.5 + Math.random();
+                const roofM = new THREE.Mesh(new THREE.ConeGeometry(r + 0.5, rH, 8), new THREE.MeshLambertMaterial({ color: 0x6a4a20 }));
+                roofM.position.set(ox, hh + rH / 2, oz); roofM.castShadow = true; this.scene.add(roofM);
+                // Door
+                const door = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 1.4), new THREE.MeshLambertMaterial({ color: 0x3a2a10 }));
+                door.position.set(ox, 0.7, oz + r + 0.02); this.scene.add(door);
+                // Window
+                const win = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.4), new THREE.MeshBasicMaterial({ color: 0xffcc66, transparent: true, opacity: 0.5 }));
+                win.position.set(ox + r + 0.02, hh * 0.55, oz); win.rotation.y = Math.PI / 2; this.scene.add(win);
+                this._addBox(ox, oz, r * 2, r * 2, hh + rH);
             }
+        }
+        // Rocky outcrops
+        const rockMat = new THREE.MeshLambertMaterial({ color: 0x7a6a5a });
+        for (let i = 0; i < 25; i++) {
+            const rx = (Math.random() - 0.5) * S * 0.85, rz = (Math.random() - 0.5) * S * 0.85;
+            if (!this.isWalkable(rx, rz, 2)) continue;
+            const rw = 0.5 + Math.random() * 1.5, rh = 0.8 + Math.random() * 2;
+            const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(rw, 0), rockMat);
+            rock.scale.set(1, rh / rw, 0.8 + Math.random() * 0.4);
+            rock.rotation.set(Math.random() * 0.3, Math.random() * Math.PI, Math.random() * 0.3);
+            rock.position.set(rx, rh * 0.4, rz); rock.castShadow = true; this.scene.add(rock);
+            this._addBox(rx, rz, rw * 2, rw * 2, rh);
+        }
+        // Cacti with arms
+        const cactusMat = new THREE.MeshLambertMaterial({ color: 0x2a7a2a });
+        for (let i = 0; i < 50; i++) {
+            const cx = (Math.random() - 0.5) * S * 0.85, cz = (Math.random() - 0.5) * S * 0.85;
+            if (!this.isWalkable(cx, cz, 1)) continue;
+            const ch = 1.5 + Math.random() * 2.5;
+            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, ch, 6), cactusMat);
+            trunk.position.set(cx, ch / 2, cz); trunk.castShadow = true; this.scene.add(trunk);
+            if (Math.random() > 0.5) {
+                const aH = 0.6 + Math.random() * 0.8, aY = ch * 0.4 + Math.random() * ch * 0.3;
+                const a1 = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, aH, 5), cactusMat);
+                a1.position.set(cx + 0.4, aY + aH / 2, cz); a1.rotation.z = -0.3; this.scene.add(a1);
+                const c1 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.4, 5), cactusMat);
+                c1.position.set(cx + 0.2, aY, cz); c1.rotation.z = Math.PI / 2; this.scene.add(c1);
+            }
+            if (Math.random() > 0.6) {
+                const aH = 0.5 + Math.random() * 0.6, aY = ch * 0.5 + Math.random() * ch * 0.2;
+                const a2 = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, aH, 5), cactusMat);
+                a2.position.set(cx - 0.4, aY + aH / 2, cz); a2.rotation.z = 0.3; this.scene.add(a2);
+                const c2 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.4, 5), cactusMat);
+                c2.position.set(cx - 0.2, aY, cz); c2.rotation.z = Math.PI / 2; this.scene.add(c2);
+            }
+        }
+        // Wooden crates for cover
+        const crateMat = new THREE.MeshLambertMaterial({ color: 0x6a5a3a });
+        for (let i = 0; i < 15; i++) {
+            const cx = (Math.random() - 0.5) * S * 0.7, cz = (Math.random() - 0.5) * S * 0.7;
+            if (!this.isWalkable(cx, cz, 2)) continue;
+            const cw = 1 + Math.random() * 1.5, cd = 1 + Math.random(), ch = 0.8 + Math.random() * 0.8;
+            const crate = new THREE.Mesh(new THREE.BoxGeometry(cw, ch, cd), crateMat);
+            crate.position.set(cx, ch / 2, cz); crate.rotation.y = Math.random() * Math.PI; crate.castShadow = true; this.scene.add(crate);
+            this._addBox(cx, cz, cw, cd, ch);
+        }
+        // Abandoned truck
+        for (let i = 0; i < 5; i++) {
+            const tx = (Math.random() - 0.5) * S * 0.6, tz = (Math.random() - 0.5) * S * 0.6;
+            if (!this.isWalkable(tx, tz, 3)) continue;
+            const body = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.2, 4.5), new THREE.MeshLambertMaterial({ color: 0x6a6a5a }));
+            body.position.set(tx, 0.8, tz); body.rotation.y = Math.random() * Math.PI; body.castShadow = true; this.scene.add(body);
+            const cab = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 1.5), new THREE.MeshLambertMaterial({ color: 0x5a5a4a }));
+            cab.position.set(tx, 1.7, tz + 1.2); cab.rotation.y = body.rotation.y; this.scene.add(cab);
+            this._addBox(tx, tz, 2.5, 5, 2);
+        }
+        // Torch lights
+        for (let x = -S / 2 + 10; x < S / 2; x += BS) for (let z = -S / 2 + 10; z < S / 2; z += BS) {
+            const p = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 3, 5), new THREE.MeshLambertMaterial({ color: 0x5a3a1a }));
+            p.position.set(x, 1.5, z); this.scene.add(p);
+            const f = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.4, 5), new THREE.MeshBasicMaterial({ color: 0xff6600 }));
+            f.position.set(x, 3.2, z); this.scene.add(f);
+            this.scene.add(Object.assign(new THREE.PointLight(0xff8833, 0.6, 15), { position: new THREE.Vector3(x, 3.2, z) }));
+        }
+        // Dry dead bushes
+        const dryMat = new THREE.MeshLambertMaterial({ color: 0x8a7a3a });
+        for (let i = 0; i < 30; i++) {
+            const bx = (Math.random() - 0.5) * S * 0.9, bz = (Math.random() - 0.5) * S * 0.9;
+            if (!this.isWalkable(bx, bz, 0.8)) continue;
+            const br = 0.3 + Math.random() * 0.5;
+            const bush = new THREE.Mesh(new THREE.IcosahedronGeometry(br, 0), dryMat);
+            bush.position.set(bx, br * 0.5, bz); bush.castShadow = true; this.scene.add(bush);
+        }
+    }
+
+    // ==================== SNOW ====================
+    _genSnow() {
+        const S = this.size, t = this.theme, BS = 20;
+        const snowMat = new THREE.MeshLambertMaterial({ color: 0xf0f4ff });
+        // Snow ground
+        const ground = new THREE.Mesh(new THREE.PlaneGeometry(S, S, 24, 24), new THREE.MeshLambertMaterial({ color: 0xe8ecf4 }));
+        ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true;
+        const gp = ground.geometry.attributes.position;
+        for (let i = 0; i < gp.count; i++) gp.setZ(i, Math.sin(gp.getX(i) * 0.2) * Math.cos(gp.getY(i) * 0.2) * 0.1);
+        gp.needsUpdate = true; ground.geometry.computeVertexNormals(); this.scene.add(ground);
+        // Icy paths
+        const pathMat = new THREE.MeshLambertMaterial({ color: 0x8a9ab0 });
+        for (let i = -S / 2; i <= S / 2; i += BS) {
+            const h = new THREE.Mesh(new THREE.PlaneGeometry(S, 3), pathMat); h.rotation.x = -Math.PI / 2; h.position.set(0, 0.02, i); this.scene.add(h);
+            const v = new THREE.Mesh(new THREE.PlaneGeometry(3, S), pathMat); v.rotation.x = -Math.PI / 2; v.position.set(i, 0.02, 0); this.scene.add(v);
+        }
+        // Frozen lake
+        const lake = new THREE.Mesh(new THREE.CircleGeometry(12, 24), new THREE.MeshLambertMaterial({ color: 0x6688bb, transparent: true, opacity: 0.7 }));
+        lake.rotation.x = -Math.PI / 2; lake.position.set(15, 0.03, 15); this.scene.add(lake);
+        // Frozen lake cracks
+        const crackMat = new THREE.MeshBasicMaterial({ color: 0x99bbdd });
+        for (let i = 0; i < 8; i++) {
+            const cl = 2 + Math.random() * 6;
+            const cr = new THREE.Mesh(new THREE.PlaneGeometry(0.05, cl), crackMat);
+            cr.rotation.x = -Math.PI / 2; cr.rotation.z = Math.random() * Math.PI;
+            cr.position.set(15 + (Math.random() - 0.5) * 16, 0.04, 15 + (Math.random() - 0.5) * 16); this.scene.add(cr);
+        }
+        // Log cabins with snow roofs and chimneys
+        const woodC = [0x5a3a1a, 0x6a4a2a, 0x4a2a10, 0x7a5a30];
+        for (let bx = -S / 2 + BS / 2; bx < S / 2; bx += BS) for (let bz = -S / 2 + BS / 2; bz < S / 2; bz += BS) {
+            if (Math.random() < 0.25) continue;
+            const w = 3 + Math.random() * 3, d = 3 + Math.random() * 3, hh = 2.5 + Math.random() * 2;
+            const ox = bx + (Math.random() - 0.5) * 8, oz = bz + (Math.random() - 0.5) * 8;
+            const wc = woodC[Math.floor(Math.random() * woodC.length)];
+            // Cabin walls
+            const cabin = new THREE.Mesh(new THREE.BoxGeometry(w, hh, d), new THREE.MeshLambertMaterial({ color: wc }));
+            cabin.position.set(ox, hh / 2, oz); cabin.castShadow = true; cabin.receiveShadow = true; this.scene.add(cabin);
+            // Log texture lines
+            for (let ly = 0.5; ly < hh; ly += 0.6) {
+                const lf = new THREE.Mesh(new THREE.BoxGeometry(w + 0.02, 0.05, 0.05), new THREE.MeshLambertMaterial({ color: wc - 0x111111 }));
+                lf.position.set(ox, ly, oz + d / 2 + 0.01); this.scene.add(lf);
+            }
+            // Snow-covered roof
+            const snowCap = new THREE.Mesh(new THREE.BoxGeometry(w + 1, 0.35, d + 1), snowMat);
+            snowCap.position.set(ox, hh + 0.17, oz); this.scene.add(snowCap);
+            // Pitched roof shape
+            const roofH = 1.4;
+            const roofPeak = new THREE.Mesh(new THREE.ConeGeometry(Math.max(w, d) * 0.65, roofH, 4), snowMat);
+            roofPeak.position.set(ox, hh + roofH / 2 + 0.3, oz); roofPeak.rotation.y = Math.PI / 4; roofPeak.castShadow = true; this.scene.add(roofPeak);
+            // Chimney with smoke hint
+            if (Math.random() > 0.3) {
+                const ch = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.8, 0.5), new THREE.MeshLambertMaterial({ color: 0x6a5a4a }));
+                ch.position.set(ox + w / 3, hh + roofH + 0.6, oz); this.scene.add(ch);
+                // Smoke puff
+                const smk = new THREE.Mesh(new THREE.SphereGeometry(0.25, 5, 5), new THREE.MeshBasicMaterial({ color: 0xaaaaaa, transparent: true, opacity: 0.3 }));
+                smk.position.set(ox + w / 3, hh + roofH + 2, oz); this.scene.add(smk);
+            }
+            // Warm glowing windows
+            const wMat = new THREE.MeshBasicMaterial({ color: 0xffcc55, transparent: true, opacity: 0.8 });
+            const w1 = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.5), wMat); w1.position.set(ox - w / 4, hh * 0.5, oz + d / 2 + 0.02); this.scene.add(w1);
+            const w2 = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.5), wMat); w2.position.set(ox + w / 4, hh * 0.5, oz + d / 2 + 0.02); this.scene.add(w2);
+            // Door
+            const dr = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 1.5), new THREE.MeshLambertMaterial({ color: 0x4a2a10 }));
+            dr.position.set(ox, 0.75, oz + d / 2 + 0.02); this.scene.add(dr);
+            this._addBox(ox, oz, w, d, hh + roofH);
+        }
+        // Snowdrifts
+        for (let i = 0; i < 30; i++) {
+            const dx = (Math.random() - 0.5) * S * 0.85, dz = (Math.random() - 0.5) * S * 0.85;
+            if (!this.isWalkable(dx, dz, 2)) continue;
+            const dr = 1.5 + Math.random() * 3, dh = 0.5 + Math.random() * 1;
+            const drift = new THREE.Mesh(new THREE.SphereGeometry(dr, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2), snowMat);
+            drift.scale.set(1, dh / dr, 1.3); drift.position.set(dx, 0, dz); drift.castShadow = true; this.scene.add(drift);
+            if (dh > 0.8) this._addBox(dx, dz, dr * 1.5, dr * 1.5, dh);
+        }
+        // Snowman
+        for (let i = 0; i < 4; i++) {
+            const sx = (Math.random() - 0.5) * S * 0.5, sz = (Math.random() - 0.5) * S * 0.5;
+            if (!this.isWalkable(sx, sz, 1.5)) continue;
+            const b1 = new THREE.Mesh(new THREE.SphereGeometry(0.6, 7, 6), snowMat); b1.position.set(sx, 0.6, sz); this.scene.add(b1);
+            const b2 = new THREE.Mesh(new THREE.SphereGeometry(0.45, 7, 6), snowMat); b2.position.set(sx, 1.5, sz); this.scene.add(b2);
+            const b3 = new THREE.Mesh(new THREE.SphereGeometry(0.3, 7, 6), snowMat); b3.position.set(sx, 2.15, sz); this.scene.add(b3);
+            // Carrot nose
+            const nose = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.3, 5), new THREE.MeshLambertMaterial({ color: 0xff6600 }));
+            nose.position.set(sx, 2.15, sz + 0.32); nose.rotation.x = Math.PI / 2; this.scene.add(nose);
+            // Eyes
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+            const e1 = new THREE.Mesh(new THREE.SphereGeometry(0.04, 4, 4), eyeMat); e1.position.set(sx - 0.1, 2.25, sz + 0.28); this.scene.add(e1);
+            const e2 = new THREE.Mesh(new THREE.SphereGeometry(0.04, 4, 4), eyeMat); e2.position.set(sx + 0.1, 2.25, sz + 0.28); this.scene.add(e2);
+        }
+        // Snow-covered pine trees
+        const pineMat = new THREE.MeshLambertMaterial({ color: 0x1a4a2a });
+        for (let i = 0; i < 60; i++) {
+            const tx = (Math.random() - 0.5) * S * 0.85, tz = (Math.random() - 0.5) * S * 0.85;
+            if (!this.isWalkable(tx, tz, 1.5)) continue;
+            const th = 3 + Math.random() * 3;
+            const tk = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.15, th * 0.4, 5), new THREE.MeshLambertMaterial({ color: 0x3a2a1a }));
+            tk.position.set(tx, th * 0.2, tz); tk.castShadow = true; this.scene.add(tk);
+            for (let l = 0; l < 3; l++) {
+                const lr = 1.2 - l * 0.3 + Math.random() * 0.3, lh = 1.2 + Math.random() * 0.3, ly = th * 0.35 + l * 1.1;
+                const cone = new THREE.Mesh(new THREE.ConeGeometry(lr, lh, 6), pineMat);
+                cone.position.set(tx, ly, tz); cone.castShadow = true; this.scene.add(cone);
+                const cap = new THREE.Mesh(new THREE.ConeGeometry(lr + 0.1, 0.2, 6), snowMat);
+                cap.position.set(tx, ly + lh / 2, tz); this.scene.add(cap);
+            }
+        }
+        // Ice rocks
+        const iceMat = new THREE.MeshLambertMaterial({ color: 0x8899aa });
+        for (let i = 0; i < 15; i++) {
+            const rx = (Math.random() - 0.5) * S * 0.8, rz = (Math.random() - 0.5) * S * 0.8;
+            if (!this.isWalkable(rx, rz, 1.5)) continue;
+            const rr = 0.5 + Math.random() * 1.2;
+            const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(rr, 0), iceMat);
+            rock.scale.set(1, 0.7, 0.9); rock.rotation.y = Math.random() * Math.PI;
+            rock.position.set(rx, rr * 0.35, rz); rock.castShadow = true; this.scene.add(rock);
+            if (rr > 0.8) this._addBox(rx, rz, rr * 2, rr * 2, rr);
+        }
+        // Lanterns
+        for (let x = -S / 2 + 10; x < S / 2; x += BS) for (let z = -S / 2 + 10; z < S / 2; z += BS) {
+            const p = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 3.5, 5), new THREE.MeshLambertMaterial({ color: 0x4a3a2a }));
+            p.position.set(x, 1.75, z); this.scene.add(p);
+            const la = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.4, 0.3), new THREE.MeshBasicMaterial({ color: 0xffeeaa }));
+            la.position.set(x, 3.7, z); this.scene.add(la);
+            this.scene.add(Object.assign(new THREE.PointLight(0xffeedd, 0.5, 14), { position: new THREE.Vector3(x, 3.7, z) }));
+        }
+    }
+
+    // ==================== FOREST ====================
+    _genForest() {
+        const S = this.size, t = this.theme, BS = 22;
+        // Grassy ground
+        const ground = new THREE.Mesh(new THREE.PlaneGeometry(S, S, 24, 24), new THREE.MeshLambertMaterial({ color: 0x3a6a2a }));
+        ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true;
+        const gp = ground.geometry.attributes.position;
+        for (let i = 0; i < gp.count; i++) gp.setZ(i, Math.sin(gp.getX(i) * 0.15) * Math.cos(gp.getY(i) * 0.2) * 0.2);
+        gp.needsUpdate = true; ground.geometry.computeVertexNormals(); this.scene.add(ground);
+        // Dirt paths
+        const pathMat = new THREE.MeshLambertMaterial({ color: 0x6a5a30 });
+        for (let i = -S / 2; i <= S / 2; i += BS) {
+            const h = new THREE.Mesh(new THREE.PlaneGeometry(S, 2.5), pathMat); h.rotation.x = -Math.PI / 2; h.position.set(0, 0.02, i); this.scene.add(h);
+            const v = new THREE.Mesh(new THREE.PlaneGeometry(2.5, S), pathMat); v.rotation.x = -Math.PI / 2; v.position.set(i, 0.02, 0); this.scene.add(v);
+        }
+        // Stream / creek
+        const streamMat = new THREE.MeshLambertMaterial({ color: 0x3a6a9a, transparent: true, opacity: 0.6 });
+        for (let sz = -S / 2; sz < S / 2; sz += 3) {
+            const sx = 20 + Math.sin(sz * 0.08) * 8;
+            const st = new THREE.Mesh(new THREE.PlaneGeometry(3, 3.2), streamMat);
+            st.rotation.x = -Math.PI / 2; st.position.set(sx, 0.03, sz); this.scene.add(st);
+        }
+        // Wooden bridge over stream
+        for (let bz = -10; bz <= 10; bz += 10) {
+            const bx = 20 + Math.sin(bz * 0.08) * 8;
+            if (!this.isWalkable(bx, bz, 2)) continue;
+            const plank = new THREE.Mesh(new THREE.BoxGeometry(4, 0.15, 2), new THREE.MeshLambertMaterial({ color: 0x6a4a20 }));
+            plank.position.set(bx, 0.15, bz); this.scene.add(plank);
+            // Rails
+            const railMat = new THREE.MeshLambertMaterial({ color: 0x5a3a10 });
+            const r1 = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.8, 4), railMat);
+            r1.position.set(bx - 1.8, 0.5, bz); this.scene.add(r1);
+            const r2 = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.8, 4), railMat);
+            r2.position.set(bx + 1.8, 0.5, bz); this.scene.add(r2);
+        }
+        // Wooden cabins with thatched roofs
+        const woodC = [0x5a3a15, 0x6a4520, 0x4a2a0a, 0x7a5a28];
+        for (let bx = -S / 2 + BS / 2; bx < S / 2; bx += BS) for (let bz = -S / 2 + BS / 2; bz < S / 2; bz += BS) {
+            if (Math.random() < 0.35) continue;
+            const w = 3 + Math.random() * 2, d = 3 + Math.random() * 2, hh = 2 + Math.random() * 1.5;
+            const ox = bx + (Math.random() - 0.5) * 10, oz = bz + (Math.random() - 0.5) * 10;
+            const wc = woodC[Math.floor(Math.random() * woodC.length)];
+            const cabin = new THREE.Mesh(new THREE.BoxGeometry(w, hh, d), new THREE.MeshLambertMaterial({ color: wc }));
+            cabin.position.set(ox, hh / 2, oz); cabin.castShadow = true; cabin.receiveShadow = true; this.scene.add(cabin);
+            // Plank lines
+            for (let ly = 0.4; ly < hh; ly += 0.5) {
+                const pl = new THREE.Mesh(new THREE.BoxGeometry(w + 0.02, 0.04, 0.04), new THREE.MeshLambertMaterial({ color: wc - 0x0a0a0a }));
+                pl.position.set(ox, ly, oz + d / 2 + 0.01); this.scene.add(pl);
+            }
+            // Thatched roof
+            const roofH = 1.2;
+            const roofM = new THREE.Mesh(new THREE.ConeGeometry(Math.max(w, d) * 0.7, roofH, 4), new THREE.MeshLambertMaterial({ color: 0x4a5a2a }));
+            roofM.position.set(ox, hh + roofH / 2, oz); roofM.rotation.y = Math.PI / 4; roofM.castShadow = true; this.scene.add(roofM);
+            // Door
+            const dr = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 1.3), new THREE.MeshLambertMaterial({ color: 0x3a1a05 }));
+            dr.position.set(ox, 0.65, oz + d / 2 + 0.02); this.scene.add(dr);
+            // Window
+            const win = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.4), new THREE.MeshBasicMaterial({ color: 0xffaa44, transparent: true, opacity: 0.7 }));
+            win.position.set(ox + w / 3, hh * 0.55, oz + d / 2 + 0.02); this.scene.add(win);
+            this._addBox(ox, oz, w, d, hh + roofH);
+        }
+        // Dense trees — mixed deciduous + pine
+        const trunkMat = new THREE.MeshLambertMaterial({ color: 0x4a2a10 });
+        const folC = [0x1a6a1a, 0x2a7a1a, 0x1a5a2a, 0x2a6a2a, 0x1a7a2a];
+        for (let i = 0; i < 120; i++) {
+            const tx = (Math.random() - 0.5) * S * 0.9, tz = (Math.random() - 0.5) * S * 0.9;
+            if (!this.isWalkable(tx, tz, 1.2)) continue;
+            if (Math.random() < 0.5) {
+                // Deciduous
+                const th = 2 + Math.random() * 2;
+                const tk = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.18, th, 6), trunkMat);
+                tk.position.set(tx, th / 2, tz); tk.castShadow = true; this.scene.add(tk);
+                const fs = 1 + Math.random() * 0.8;
+                const fc = folC[Math.floor(Math.random() * folC.length)];
+                const fo = new THREE.Mesh(new THREE.SphereGeometry(fs, 7, 5), new THREE.MeshLambertMaterial({ color: fc }));
+                fo.position.set(tx, th + fs * 0.5, tz); fo.castShadow = true; this.scene.add(fo);
+                if (Math.random() > 0.4) {
+                    const f2 = new THREE.Mesh(new THREE.SphereGeometry(fs * 0.7, 6, 4), new THREE.MeshLambertMaterial({ color: fc }));
+                    f2.position.set(tx + fs * 0.5, th + fs * 0.2, tz + fs * 0.3); f2.castShadow = true; this.scene.add(f2);
+                }
+            } else {
+                // Pine
+                const th = 3 + Math.random() * 3;
+                const tk = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.14, th * 0.5, 5), trunkMat);
+                tk.position.set(tx, th * 0.25, tz); tk.castShadow = true; this.scene.add(tk);
+                for (let l = 0; l < 3; l++) {
+                    const lr = 1.3 - l * 0.35, lh = 1.3;
+                    const fc = folC[Math.floor(Math.random() * folC.length)];
+                    const co = new THREE.Mesh(new THREE.ConeGeometry(lr, lh, 6), new THREE.MeshLambertMaterial({ color: fc }));
+                    co.position.set(tx, th * 0.4 + l * 1, tz); co.castShadow = true; this.scene.add(co);
+                }
+            }
+        }
+        // Bushes
+        const bushMat = new THREE.MeshLambertMaterial({ color: 0x2a5a1a });
+        for (let i = 0; i < 60; i++) {
+            const bx = (Math.random() - 0.5) * S * 0.9, bz = (Math.random() - 0.5) * S * 0.9;
+            if (!this.isWalkable(bx, bz, 1)) continue;
+            const br = 0.4 + Math.random() * 0.6;
+            const bush = new THREE.Mesh(new THREE.SphereGeometry(br, 6, 4), bushMat);
+            bush.position.set(bx, br * 0.6, bz); bush.castShadow = true; this.scene.add(bush);
+        }
+        // Rocks and boulders
+        const rockMat = new THREE.MeshLambertMaterial({ color: 0x5a5a4a });
+        for (let i = 0; i < 30; i++) {
+            const rx = (Math.random() - 0.5) * S * 0.85, rz = (Math.random() - 0.5) * S * 0.85;
+            if (!this.isWalkable(rx, rz, 1.5)) continue;
+            const rr = 0.3 + Math.random() * 1;
+            const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(rr, 0), rockMat);
+            rock.scale.set(1, 0.6 + Math.random() * 0.4, 0.8 + Math.random() * 0.4);
+            rock.rotation.y = Math.random() * Math.PI;
+            rock.position.set(rx, rr * 0.3, rz); rock.castShadow = true; this.scene.add(rock);
+            if (rr > 0.7) this._addBox(rx, rz, rr * 2, rr * 2, rr);
+        }
+        // Fallen logs
+        const logMat = new THREE.MeshLambertMaterial({ color: 0x4a2a0a });
+        for (let i = 0; i < 10; i++) {
+            const lx = (Math.random() - 0.5) * S * 0.7, lz = (Math.random() - 0.5) * S * 0.7;
+            if (!this.isWalkable(lx, lz, 2)) continue;
+            const ll = 2 + Math.random() * 3;
+            const log = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.25, ll, 6), logMat);
+            log.position.set(lx, 0.22, lz); log.rotation.z = Math.PI / 2; log.rotation.y = Math.random() * Math.PI;
+            log.castShadow = true; this.scene.add(log);
+            this._addBox(lx, lz, ll, 0.5, 0.5);
+        }
+        // Mushrooms
+        const mushroomCap = new THREE.MeshLambertMaterial({ color: 0xcc3333 });
+        const mushroomStem = new THREE.MeshLambertMaterial({ color: 0xeeeecc });
+        for (let i = 0; i < 20; i++) {
+            const mx = (Math.random() - 0.5) * S * 0.8, mz = (Math.random() - 0.5) * S * 0.8;
+            if (!this.isWalkable(mx, mz, 0.5)) continue;
+            const ms = 0.1 + Math.random() * 0.15;
+            const stem = new THREE.Mesh(new THREE.CylinderGeometry(ms * 0.3, ms * 0.4, ms * 2, 5), mushroomStem);
+            stem.position.set(mx, ms, mz); this.scene.add(stem);
+            const cap = new THREE.Mesh(new THREE.SphereGeometry(ms, 6, 4, 0, Math.PI * 2, 0, Math.PI / 2), mushroomCap);
+            cap.position.set(mx, ms * 2, mz); this.scene.add(cap);
+        }
+        // Campfires
+        for (let i = 0; i < 6; i++) {
+            const fx = (Math.random() - 0.5) * S * 0.6, fz = (Math.random() - 0.5) * S * 0.6;
+            if (!this.isWalkable(fx, fz, 1.5)) continue;
+            for (let s = 0; s < 6; s++) {
+                const sa = (s / 6) * Math.PI * 2;
+                const stone = new THREE.Mesh(new THREE.SphereGeometry(0.15, 4, 3), rockMat);
+                stone.position.set(fx + Math.cos(sa) * 0.5, 0.1, fz + Math.sin(sa) * 0.5); this.scene.add(stone);
+            }
+            const fire = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.6, 5), new THREE.MeshBasicMaterial({ color: 0xff6600 }));
+            fire.position.set(fx, 0.3, fz); this.scene.add(fire);
+            this.scene.add(Object.assign(new THREE.PointLight(0xff6622, 0.8, 10), { position: new THREE.Vector3(fx, 1, fz) }));
+        }
+        // Ambient forest lights
+        for (let x = -S / 2 + 12; x < S / 2; x += BS) for (let z = -S / 2 + 12; z < S / 2; z += BS) {
+            this.scene.add(Object.assign(new THREE.PointLight(0xaaff66, 0.3, 12), { position: new THREE.Vector3(x + Math.random() * 4, 2, z + Math.random() * 4) }));
         }
     }
 
@@ -819,6 +1287,47 @@ class CityMap3D {
             if (box.intersectsSphere(testSphere)) return false;
         }
         return true;
+    }
+
+    // Check if position is on top of a building
+    isOnBuilding(x, z) {
+        for (const b of this.buildings) {
+            if (x >= b.x - b.w / 2 && x <= b.x + b.w / 2 &&
+                z >= b.z - b.d / 2 && z <= b.z + b.d / 2) {
+                return b;
+            }
+        }
+        return null;
+    }
+
+    // Find nearest building to climb
+    getNearestClimbable(x, z, maxDist = 2.5) {
+        let nearest = null, bestDist = maxDist;
+        for (const b of this.buildings) {
+            if (b.h < 2) continue; // too short to climb
+            const cx = Math.max(b.x - b.w / 2, Math.min(x, b.x + b.w / 2));
+            const cz = Math.max(b.z - b.d / 2, Math.min(z, b.z + b.d / 2));
+            const d = Math.sqrt((x - cx) ** 2 + (z - cz) ** 2);
+            if (d < bestDist) { bestDist = d; nearest = b; }
+        }
+        return nearest;
+    }
+
+    // Get vehicle spawn positions (open areas)
+    getVehicleSpawns(count = 4) {
+        const spawns = [];
+        for (let i = 0; i < 500 && spawns.length < count; i++) {
+            const x = (Math.random() - 0.5) * this.size * 0.7;
+            const z = (Math.random() - 0.5) * this.size * 0.7;
+            if (this.isWalkable(x, z, 2.0)) {
+                let tooClose = false;
+                for (const s of spawns) {
+                    if (Math.sqrt((x - s.x) ** 2 + (z - s.z) ** 2) < 25) { tooClose = true; break; }
+                }
+                if (!tooClose) spawns.push({ x, z });
+            }
+        }
+        return spawns;
     }
 
     getSpawnPoint() {
@@ -1139,23 +1648,52 @@ class Enemy3D {
 
         if (this.flashTimer > 0) this.flashTimer -= dt;
 
-        const seePlayer = dist < 30;
+        const seePlayer = dist < 35;
+        const hpRatio = this.hp / this.maxHp;
 
-        if (seePlayer && dist < this.range) this.state = 'attack';
-        else if (seePlayer) this.state = 'chase';
+        // Flee when hurt or player is close — enemies try to run away
+        if (seePlayer && hpRatio < 0.5 && dist < 20) this.state = 'flee';
+        else if (seePlayer && dist < 12) this.state = 'flee'; // run when too close
+        else if (seePlayer && dist < this.range) this.state = 'attack';
+        else if (seePlayer) this.state = 'flee'; // default: run away from hero
         else this.state = 'patrol';
 
         let mx = 0, mz = 0;
         let targetAngle = this.angle;
 
-        if (this.state === 'chase' || this.state === 'attack') {
+        if (this.state === 'flee') {
+            // Run AWAY from player
+            const fleeAngle = Math.atan2(-dx, -dz);
+            // Add some zigzag to make it interesting
+            const zigzag = Math.sin(performance.now() * 0.003 + this.x * 10) * 0.4;
+            targetAngle = fleeAngle + zigzag;
+            const fleeSpeed = this.speed * 1.4; // run faster when scared
+            mx = Math.sin(targetAngle) * fleeSpeed;
+            mz = Math.cos(targetAngle) * fleeSpeed;
+
+            // Occasionally shoot back while fleeing (30% chance per cooldown)
+            this.shootCooldown -= dt;
+            if (this.shootCooldown <= 0 && dist < this.range * 1.5 && Math.random() < 0.3) {
+                this.shootCooldown = this.shootRate * 1.5;
+                const dir = new THREE.Vector3(dx, 0, dz).normalize();
+                dir.x += (Math.random() - 0.5) * 0.25;
+                dir.z += (Math.random() - 0.5) * 0.25;
+                dir.normalize();
+                const bulletPos = new THREE.Vector3(this.x, 1.1, this.z).add(dir.clone().multiplyScalar(0.5));
+                bullets.push(new Bullet3D(scene, bulletPos, dir, {
+                    damage: this.damage, range: this.range * 20, bulletSpeed: 0.5, explosive: false
+                }, true));
+                CharacterBuilder.applyRecoil(this.mesh);
+            }
+        } else if (this.state === 'attack') {
             targetAngle = Math.atan2(dx, dz);
-            if (dist > 3) {
-                mx = (dx / dist) * this.speed;
-                mz = (dz / dist) * this.speed;
+            // Keep some distance while attacking
+            if (dist < 8) {
+                mx = (-dx / dist) * this.speed * 0.5;
+                mz = (-dz / dist) * this.speed * 0.5;
             }
             this.shootCooldown -= dt;
-            if (this.state === 'attack' && this.shootCooldown <= 0) {
+            if (this.shootCooldown <= 0) {
                 this.shootCooldown = this.shootRate;
                 const dir = new THREE.Vector3(dx, 0, dz).normalize();
                 dir.x += (Math.random() - 0.5) * 0.15;
@@ -1168,18 +1706,19 @@ class Enemy3D {
                 CharacterBuilder.applyRecoil(this.mesh);
             }
         } else {
+            // Patrol — wander randomly, looking nervous
             if (!this.patrolTarget || dist2D(this.x, this.z, this.patrolTarget.x, this.patrolTarget.z) < 1) {
                 this.patrolTarget = {
-                    x: this.x + (Math.random() - 0.5) * 15,
-                    z: this.z + (Math.random() - 0.5) * 15
+                    x: this.x + (Math.random() - 0.5) * 20,
+                    z: this.z + (Math.random() - 0.5) * 20
                 };
             }
             const pdx = this.patrolTarget.x - this.x;
             const pdz = this.patrolTarget.z - this.z;
             const pdist = Math.sqrt(pdx * pdx + pdz * pdz);
             if (pdist > 0.5) {
-                mx = (pdx / pdist) * this.speed * 0.5;
-                mz = (pdz / pdist) * this.speed * 0.5;
+                mx = (pdx / pdist) * this.speed * 0.7;
+                mz = (pdz / pdist) * this.speed * 0.7;
                 targetAngle = Math.atan2(pdx, pdz);
             }
         }
@@ -1243,6 +1782,292 @@ class Enemy3D {
     }
 }
 
+// ===== 3D VEHICLE =====
+class Vehicle3D {
+    constructor(scene, x, z, type) {
+        this.scene = scene;
+        this.x = x; this.z = z;
+        this.type = type; // 'jeep' or 'car'
+        this.angle = Math.random() * Math.PI * 2;
+        this.speed = 0;
+        this.maxSpeed = type === 'car' ? 0.35 : 0.22;
+        this.accel = type === 'car' ? 0.012 : 0.008;
+        this.turnSpeed = type === 'car' ? 0.04 : 0.035;
+        this.occupied = false;
+        this.radius = 1.2;
+        this.hp = type === 'car' ? 80 : 150;
+        this.maxHp = this.hp;
+
+        this.mesh = this._createMesh();
+        this.mesh.position.set(x, 0, z);
+        this.mesh.rotation.y = this.angle;
+        scene.add(this.mesh);
+
+        // Interaction prompt
+        this.prompt = this._createPrompt();
+        this.prompt.position.set(x, 3, z);
+        this.prompt.visible = false;
+        scene.add(this.prompt);
+    }
+
+    _createMesh() {
+        const g = new THREE.Group();
+        if (this.type === 'jeep') {
+            // Jeep body
+            const bodyMat = new THREE.MeshLambertMaterial({ color: 0x3a5a2a, flatShading: true });
+            const body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.8, 3.2), bodyMat);
+            body.position.y = 0.6; body.castShadow = true; g.add(body);
+            // Cabin
+            const cabinMat = new THREE.MeshLambertMaterial({ color: 0x2a4a1a, flatShading: true });
+            const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.7, 1.4), cabinMat);
+            cabin.position.set(0, 1.35, -0.4); cabin.castShadow = true; g.add(cabin);
+            // Windshield
+            const glassMat = new THREE.MeshBasicMaterial({ color: 0x88ccff, transparent: true, opacity: 0.4 });
+            const ws = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.6, 0.06), glassMat);
+            ws.position.set(0, 1.3, 0.27); g.add(ws);
+            // Wheels
+            const wheelMat = new THREE.MeshLambertMaterial({ color: 0x222222, flatShading: true });
+            [[-0.9, 0.3, 1.1], [0.9, 0.3, 1.1], [-0.9, 0.3, -1.1], [0.9, 0.3, -1.1]].forEach(p => {
+                const w = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.2, 8), wheelMat);
+                w.rotation.z = Math.PI / 2; w.position.set(...p); w.castShadow = true; g.add(w);
+            });
+            // Headlights
+            const hlMat = new THREE.MeshBasicMaterial({ color: 0xffffaa });
+            [-0.6, 0.6].forEach(x => {
+                const hl = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.15, 0.06), hlMat);
+                hl.position.set(x, 0.7, 1.63); g.add(hl);
+            });
+            // Roll bar
+            const barMat = new THREE.MeshLambertMaterial({ color: 0x444444, flatShading: true });
+            [-0.75, 0.75].forEach(x => {
+                const bar = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.8, 0.08), barMat);
+                bar.position.set(x, 1.4, -0.9); g.add(bar);
+            });
+            const topBar = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.08, 0.08), barMat);
+            topBar.position.set(0, 1.8, -0.9); g.add(topBar);
+        } else {
+            // Sports car
+            const bodyMat = new THREE.MeshLambertMaterial({ color: 0xcc2222, flatShading: true });
+            const body = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.5, 3.4), bodyMat);
+            body.position.y = 0.45; body.castShadow = true; g.add(body);
+            // Hood slope
+            const hood = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.3, 1.2), bodyMat);
+            hood.position.set(0, 0.55, 1.0); g.add(hood);
+            // Cabin
+            const cabinMat = new THREE.MeshLambertMaterial({ color: 0x991111, flatShading: true });
+            const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.5, 1.0), cabinMat);
+            cabin.position.set(0, 0.95, -0.3); cabin.castShadow = true; g.add(cabin);
+            // Windshield
+            const glassMat = new THREE.MeshBasicMaterial({ color: 0x88ccff, transparent: true, opacity: 0.4 });
+            const ws = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.4, 0.06), glassMat);
+            ws.position.set(0, 0.95, 0.17); g.add(ws);
+            // Rear window
+            const rw = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.35, 0.06), glassMat);
+            rw.position.set(0, 0.9, -0.77); g.add(rw);
+            // Wheels
+            const wheelMat = new THREE.MeshLambertMaterial({ color: 0x1a1a1a, flatShading: true });
+            [[-0.85, 0.25, 1.2], [0.85, 0.25, 1.2], [-0.85, 0.25, -1.2], [0.85, 0.25, -1.2]].forEach(p => {
+                const w = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.18, 8), wheelMat);
+                w.rotation.z = Math.PI / 2; w.position.set(...p); w.castShadow = true; g.add(w);
+            });
+            // Headlights
+            const hlMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            [-0.55, 0.55].forEach(x => {
+                const hl = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.1, 0.06), hlMat);
+                hl.position.set(x, 0.5, 1.73); g.add(hl);
+            });
+            // Tail lights
+            const tlMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            [-0.55, 0.55].forEach(x => {
+                const tl = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.08, 0.06), tlMat);
+                tl.position.set(x, 0.45, -1.73); g.add(tl);
+            });
+            // Spoiler
+            const spoilerMat = new THREE.MeshLambertMaterial({ color: 0x222222, flatShading: true });
+            [-0.6, 0.6].forEach(x => {
+                const post = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.3, 0.06), spoilerMat);
+                post.position.set(x, 0.85, -1.5); g.add(post);
+            });
+            const wing = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.04, 0.3), spoilerMat);
+            wing.position.set(0, 1.0, -1.5); g.add(wing);
+        }
+        return g;
+    }
+
+    _createPrompt() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 256; canvas.height = 64;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#00ff88';
+        ctx.font = 'bold 24px Orbitron, Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('[E] ENTER ' + this.type.toUpperCase(), 128, 40);
+        const tex = new THREE.CanvasTexture(canvas);
+        const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+        const sprite = new THREE.Sprite(mat);
+        sprite.scale.set(2.5, 0.6, 1);
+        return sprite;
+    }
+
+    update(playerX, playerZ, dt) {
+        if (this.occupied) {
+            this.mesh.position.set(this.x, 0, this.z);
+            this.mesh.rotation.y = this.angle;
+            this.prompt.visible = false;
+        } else {
+            const d = dist2D(playerX, playerZ, this.x, this.z);
+            this.prompt.visible = d < 3.5;
+            this.prompt.position.set(this.x, 3, this.z);
+        }
+    }
+
+    drive(keys, dt, map) {
+        const dtScale = dt / 16.667;
+        const forward = keys.w || keys.arrowup;
+        const backward = keys.s || keys.arrowdown;
+        const left = keys.a || keys.arrowleft;
+        const right = keys.d || keys.arrowright;
+
+        if (forward) this.speed = Math.min(this.speed + this.accel * dtScale, this.maxSpeed);
+        else if (backward) this.speed = Math.max(this.speed - this.accel * 1.5 * dtScale, -this.maxSpeed * 0.4);
+        else this.speed *= 0.96; // friction
+
+        if (Math.abs(this.speed) < 0.001) this.speed = 0;
+
+        if (left) this.angle += this.turnSpeed * dtScale * (this.speed > 0 ? 1 : this.speed < 0 ? -1 : 0);
+        if (right) this.angle -= this.turnSpeed * dtScale * (this.speed > 0 ? 1 : this.speed < 0 ? -1 : 0);
+
+        const newX = this.x + Math.sin(this.angle) * this.speed * dtScale;
+        const newZ = this.z + Math.cos(this.angle) * this.speed * dtScale;
+
+        if (map.isWalkable(newX, this.z, this.radius)) this.x = newX;
+        else this.speed *= -0.3;
+        if (map.isWalkable(this.x, newZ, this.radius)) this.z = newZ;
+        else this.speed *= -0.3;
+
+        const half = map.size / 2 - 2;
+        this.x = Math.max(-half, Math.min(half, this.x));
+        this.z = Math.max(-half, Math.min(half, this.z));
+
+        this.mesh.position.set(this.x, 0, this.z);
+        this.mesh.rotation.y = this.angle;
+    }
+
+    destroy() {
+        this.scene.remove(this.mesh);
+        this.scene.remove(this.prompt);
+    }
+}
+
+// ===== 3D PARACHUTE =====
+class Parachute3D {
+    constructor(scene) {
+        this.scene = scene;
+        this.active = false;
+        this.mesh = this._create();
+        this.mesh.visible = false;
+        scene.add(this.mesh);
+    }
+
+    _create() {
+        const g = new THREE.Group();
+        // Canopy — dome shape using half sphere
+        const canopyMat = new THREE.MeshLambertMaterial({ color: 0xff6600, flatShading: true, side: THREE.DoubleSide, transparent: true, opacity: 0.85 });
+        const canopy = new THREE.Mesh(new THREE.SphereGeometry(1.5, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2), canopyMat);
+        canopy.position.y = 3.5;
+        canopy.scale.set(1, 0.5, 1);
+        g.add(canopy);
+        // Stripes
+        const stripeMat = new THREE.MeshLambertMaterial({ color: 0xffffff, flatShading: true, side: THREE.DoubleSide, transparent: true, opacity: 0.7 });
+        const stripe = new THREE.Mesh(new THREE.SphereGeometry(1.52, 8, 6, Math.PI / 4, Math.PI / 4, 0, Math.PI / 2), stripeMat);
+        stripe.position.y = 3.5;
+        stripe.scale.set(1, 0.5, 1);
+        g.add(stripe);
+        // Cords
+        const cordMat = new THREE.MeshBasicMaterial({ color: 0x888888 });
+        for (let i = 0; i < 6; i++) {
+            const angle = (i / 6) * Math.PI * 2;
+            const cordGeo = new THREE.CylinderGeometry(0.015, 0.015, 3.2, 3);
+            const cord = new THREE.Mesh(cordGeo, cordMat);
+            const topX = Math.sin(angle) * 1.2;
+            const topZ = Math.cos(angle) * 1.2;
+            cord.position.set(topX / 2, 2.0, topZ / 2);
+            cord.lookAt(new THREE.Vector3(0, 0.5, 0));
+            cord.rotateX(Math.PI / 2);
+            g.add(cord);
+        }
+        return g;
+    }
+
+    deploy(x, y, z) {
+        this.active = true;
+        this.mesh.visible = true;
+        this.mesh.position.set(x, y, z);
+    }
+
+    updatePosition(x, y, z) {
+        if (!this.active) return;
+        this.mesh.position.set(x, y, z);
+        this.mesh.rotation.y += 0.005; // slow spin
+    }
+
+    retract() {
+        this.active = false;
+        this.mesh.visible = false;
+    }
+
+    destroy() {
+        this.scene.remove(this.mesh);
+    }
+}
+
+// ===== CONFETTI EFFECT =====
+class ConfettiEffect {
+    constructor(scene, pos) {
+        this.scene = scene;
+        this.particles = [];
+        this.timer = 0;
+        this.duration = 4000;
+        this.alive = true;
+        const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff, 0xffa500, 0xffd700];
+        for (let i = 0; i < 60; i++) {
+            const geo = new THREE.BoxGeometry(0.08, 0.08, 0.02);
+            const mat = new THREE.MeshBasicMaterial({ color: colors[Math.floor(Math.random() * colors.length)], transparent: true });
+            const p = new THREE.Mesh(geo, mat);
+            p.position.copy(pos);
+            p.position.y += 2;
+            p.userData.vel = new THREE.Vector3(
+                (Math.random() - 0.5) * 0.15,
+                0.08 + Math.random() * 0.12,
+                (Math.random() - 0.5) * 0.15
+            );
+            p.userData.rotSpeed = new THREE.Vector3(
+                Math.random() * 0.2, Math.random() * 0.2, Math.random() * 0.2
+            );
+            scene.add(p);
+            this.particles.push(p);
+        }
+    }
+
+    update(dt) {
+        this.timer += dt;
+        if (this.timer > this.duration) { this.alive = false; return; }
+        const progress = this.timer / this.duration;
+        for (const p of this.particles) {
+            p.position.add(p.userData.vel);
+            p.userData.vel.y -= 0.003; // gravity
+            p.rotation.x += p.userData.rotSpeed.x;
+            p.rotation.y += p.userData.rotSpeed.y;
+            p.rotation.z += p.userData.rotSpeed.z;
+            p.material.opacity = Math.max(0, 1 - progress);
+        }
+    }
+
+    destroy() {
+        for (const p of this.particles) this.scene.remove(p);
+    }
+}
+
 // ===== 3D PICKUP =====
 class Pickup3D {
     constructor(scene, x, z, type) {
@@ -1295,6 +2120,7 @@ class Player3D {
 
         const spawn = map.getSpawnPoint();
         this.x = spawn.x; this.z = spawn.z;
+        this.y = 0; // height for climbing/parachute
         this.angle = 0;
         this.radius = 0.5;
 
@@ -1309,11 +2135,25 @@ class Player3D {
         this.reloadTimer = 0;
         this.shootCooldown = 0;
 
-        // Movement: WAD + Arrow keys; Shoot: mouse-click or S or F key
-        this.keys = { w: false, a: false, d: false, arrowup: false, arrowdown: false, arrowleft: false, arrowright: false };
+        // Movement: WASD + Arrow keys; Shoot: mouse-click or F key
+        this.keys = { w: false, a: false, s: false, d: false, arrowup: false, arrowdown: false, arrowleft: false, arrowright: false };
         this.shooting = false;
         this.flashTimer = 0;
-        this.bombCooldown = 0; // ms cooldown between throws
+        this.bombCooldown = 0;
+
+        // Vehicle state
+        this.inVehicle = false;
+        this.currentVehicle = null;
+
+        // Climbing state
+        this.climbing = false;
+        this.climbTarget = null; // building being climbed
+        this.onRooftop = false;
+        this.rooftopHeight = 0;
+
+        // Parachute state
+        this.parachuting = false;
+        this.parachuteY = 0; // current Y while floating down
 
         // 3D model — hero gets unique cape, visor, shoulder pads
         this.mesh = CharacterBuilder.createHuman({
@@ -1371,11 +2211,67 @@ class Player3D {
     update(map, dt, bullets, aimAngle) {
         const dtScale = dt / 16.667; // 1.0 at 60fps
 
+        // Skip normal movement if in vehicle
+        if (this.inVehicle) {
+            // Position follows vehicle
+            this.mesh.visible = false;
+            this.label.visible = false;
+            return;
+        }
+        this.mesh.visible = true;
+        this.label.visible = true;
+
+        // Parachute floating
+        if (this.parachuting) {
+            let mx = 0, mz = 0;
+            if (this.keys.w || this.keys.arrowup) mz += 1;
+            if (this.keys.s || this.keys.arrowdown) mz -= 1;
+            if (this.keys.a || this.keys.arrowleft) mx -= 1;
+            if (this.keys.d || this.keys.arrowright) mx += 1;
+            if (mx !== 0 || mz !== 0) {
+                const len = Math.sqrt(mx * mx + mz * mz);
+                mx /= len; mz /= len;
+                const sinA = Math.sin(aimAngle), cosA = Math.cos(aimAngle);
+                mx = (mx * cosA + mz * sinA) * this.speed * 0.6 * dtScale;
+                mz = (-mx * sinA + mz * cosA) * this.speed * 0.6 * dtScale;
+            }
+            this.x += mx; this.z += mz;
+            this.y -= 0.04 * dtScale; // descend slowly
+            if (this.y <= 0) {
+                this.y = 0;
+                this.parachuting = false;
+                this.onRooftop = false;
+            }
+            this.angle = aimAngle;
+            this.mesh.position.set(this.x, this.y, this.z);
+            this.label.position.set(this.x, this.y + 2.3, this.z);
+            this.mesh.rotation.set(0, this.angle, 0);
+            if (this.flashTimer > 0) this.flashTimer -= dt;
+            if (this.bombCooldown > 0) this.bombCooldown -= dt;
+            return;
+        }
+
+        // Climbing animation
+        if (this.climbing && this.climbTarget) {
+            this.y += 0.08 * dtScale;
+            if (this.y >= this.climbTarget.h) {
+                this.y = this.climbTarget.h;
+                this.climbing = false;
+                this.onRooftop = true;
+                this.rooftopHeight = this.climbTarget.h;
+            }
+            this.mesh.position.set(this.x, this.y, this.z);
+            this.label.position.set(this.x, this.y + 2.3, this.z);
+            CharacterBuilder.animateWalk(this.mesh, dt, true, false);
+            this.mesh.rotation.set(0, this.angle, 0);
+            return;
+        }
+
         let mx = 0, mz = 0;
-        if (this.keys.w || this.keys.arrowup) mz -= 1;
-        if (this.keys.arrowdown) mz += 1;
-        if (this.keys.a || this.keys.arrowleft) mx -= 1;
-        if (this.keys.d || this.keys.arrowright) mx += 1;
+        if (this.keys.w || this.keys.arrowup) mz += 1;    // forward
+        if (this.keys.s || this.keys.arrowdown) mz -= 1;  // backward
+        if (this.keys.a || this.keys.arrowleft) mx -= 1;  // strafe left
+        if (this.keys.d || this.keys.arrowright) mx += 1;  // strafe right
 
         const isMoving = (mx !== 0 || mz !== 0);
 
@@ -1384,43 +2280,58 @@ class Player3D {
             mx /= len;
             mz /= len;
 
-            // Rotate movement input relative to current aim direction
-            // so Left/Right move relative to camera, not world
+            // Rotate movement relative to facing direction (aimAngle)
             const sinA = Math.sin(aimAngle);
             const cosA = Math.cos(aimAngle);
-            const relX = mx * cosA - mz * sinA;
-            const relZ = mx * sinA + mz * cosA;
+            const relX = mx * cosA + mz * sinA;
+            const relZ = -mx * sinA + mz * cosA;
 
             mx = relX * this.speed * dtScale;
             mz = relZ * this.speed * dtScale;
         }
 
-        const newX = this.x + mx;
-        const newZ = this.z + mz;
-        if (map.isWalkable(newX, this.z, this.radius)) this.x = newX;
-        if (map.isWalkable(this.x, newZ, this.radius)) this.z = newZ;
+        // On rooftop: check if walking off edge
+        if (this.onRooftop) {
+            const newX = this.x + mx;
+            const newZ = this.z + mz;
+            // Check if still on the rooftop building
+            const onBuilding = map.isOnBuilding(newX, newZ);
+            if (onBuilding) {
+                this.x = newX; this.z = newZ;
+            } else {
+                // Walked off edge — start falling/parachute opportunity
+                this.onRooftop = false;
+                this.x = newX; this.z = newZ;
+                // Auto-trigger parachute when falling from building
+                this.parachuting = true;
+            }
+        } else {
+            const newX = this.x + mx;
+            const newZ = this.z + mz;
+            if (map.isWalkable(newX, this.z, this.radius)) this.x = newX;
+            if (map.isWalkable(this.x, newZ, this.radius)) this.z = newZ;
+        }
 
         const half = map.size / 2 - 1;
         this.x = Math.max(-half, Math.min(half, this.x));
         this.z = Math.max(-half, Math.min(half, this.z));
 
-        // Hero always faces aim direction — no lerp delay for tight gun focus
+        // Hero always faces aim direction
         this.angle = aimAngle;
-        // Keep angle in [-PI, PI] range to avoid drift
         this.angle = ((this.angle + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
 
         this.mesh.position.x = this.x;
+        this.mesh.position.y = this.y;
         this.mesh.position.z = this.z;
-        this.label.position.set(this.x, 2.3, this.z);
+        this.label.position.set(this.x, this.y + 2.3, this.z);
 
         // Walk animation
         const moving = (mx !== 0 || mz !== 0);
         CharacterBuilder.animateWalk(this.mesh, dt, moving, this.shooting);
-        // Subtle body bob — only on mesh Y, small amount
         const bob = this.mesh.userData._bodyBob || 0;
-        this.mesh.position.y = bob;
+        this.mesh.position.y = this.y + bob;
 
-        // Set final rotation AFTER animation — prevents any axis corruption
+        // Set final rotation AFTER animation
         this.mesh.rotation.set(0, this.angle, 0);
 
         // Reload
@@ -1447,7 +2358,7 @@ class Player3D {
                     Math.sin(this.angle + spread * accMult), 0,
                     Math.cos(this.angle + spread * accMult)
                 ).normalize();
-                const bulletPos = new THREE.Vector3(this.x, 1.1, this.z).add(dir.clone().multiplyScalar(0.6));
+                const bulletPos = new THREE.Vector3(this.x, this.y + 1.1, this.z).add(dir.clone().multiplyScalar(0.6));
                 bullets.push(new Bullet3D(this.scene, bulletPos, dir, w));
             }
             this.ammo--;
@@ -1583,7 +2494,9 @@ class Game {
         this.initRenderer();
         this.currentLevel = LEVELS[levelNum - 1];
         this.scene = new THREE.Scene();
-        this.scene.fog = new THREE.FogExp2(0x0a0a15, 0.012);
+
+        const theme = state.theme;
+        this.scene.fog = new THREE.FogExp2(theme.fogColor, theme.fogDensity);
 
         // Camera
         this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200);
@@ -1591,10 +2504,10 @@ class Game {
         this.updateCameraBtnState();
 
         // Lighting
-        const ambientLight = new THREE.AmbientLight(0x303050, 0.6);
+        const ambientLight = new THREE.AmbientLight(theme.ambientColor, theme.ambientIntensity);
         this.scene.add(ambientLight);
 
-        const dirLight = new THREE.DirectionalLight(0xffeedd, 0.5);
+        const dirLight = new THREE.DirectionalLight(theme.dirColor, theme.dirIntensity);
         dirLight.position.set(30, 50, 20);
         dirLight.castShadow = true;
         dirLight.shadow.mapSize.width = 2048;
@@ -1608,40 +2521,56 @@ class Game {
         this.scene.add(dirLight);
 
         // Moon/sky light
-        const moonLight = new THREE.DirectionalLight(0x4466aa, 0.3);
+        const moonLight = new THREE.DirectionalLight(theme.moonColor, theme.moonIntensity);
         moonLight.position.set(-20, 40, -30);
         this.scene.add(moonLight);
 
         // Skybox — gradient sphere
         const skyGeo = new THREE.SphereGeometry(100, 16, 16);
+        const sb = theme.skyBottom, st = theme.skyTop;
+        const starsOn = theme.starsEnabled ? 1.0 : 0.0;
         const skyMat = new THREE.ShaderMaterial({
             side: THREE.BackSide,
-            uniforms: {},
+            uniforms: {
+                bottomColor: { value: new THREE.Vector3(sb[0], sb[1], sb[2]) },
+                topColor: { value: new THREE.Vector3(st[0], st[1], st[2]) },
+                starsEnabled: { value: starsOn }
+            },
             vertexShader: `varying vec3 vWorldPosition;
                 void main() {
                     vec4 worldPos = modelMatrix * vec4(position, 1.0);
                     vWorldPosition = worldPos.xyz;
                     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
                 }`,
-            fragmentShader: `varying vec3 vWorldPosition;
+            fragmentShader: `uniform vec3 bottomColor;
+                uniform vec3 topColor;
+                uniform float starsEnabled;
+                varying vec3 vWorldPosition;
                 void main() {
                     float h = normalize(vWorldPosition).y;
-                    vec3 bottomColor = vec3(0.04, 0.04, 0.08);
-                    vec3 topColor = vec3(0.02, 0.02, 0.12);
                     vec3 color = mix(bottomColor, topColor, max(h, 0.0));
-                    // Stars
                     float star = step(0.998, fract(sin(dot(vWorldPosition.xz * 50.0, vec2(12.9898, 78.233))) * 43758.5453));
-                    color += vec3(star * 0.6) * step(0.1, h);
+                    color += vec3(star * 0.6) * step(0.1, h) * starsEnabled;
                     gl_FragColor = vec4(color, 1.0);
                 }`
         });
         this.scene.add(new THREE.Mesh(skyGeo, skyMat));
 
         // Map
-        this.map = new CityMap3D(this.scene);
+        this.map = new CityMap3D(this.scene, theme);
 
         // Player
         this.player = new Player3D(state.hero, state.weapon, this.map, this.scene);
+
+        // Allocate level bombs
+        const lvlBombs = this.currentLevel.bombs;
+        if (lvlBombs) {
+            this._levelBombs = { ...lvlBombs };
+            for (const [id, count] of Object.entries(lvlBombs)) {
+                state.data.bombs[id] = (state.data.bombs[id] || 0) + count;
+            }
+            state.save();
+        }
 
         // Reset state
         this.enemies = [];
@@ -1720,8 +2649,8 @@ class Game {
             if (k === 'r') this.player.startReload();
             if (k === 'g') this.throwBomb();
             if (k === 'escape') this.togglePause();
-            // S or F key = shoot (toggle on)
-            if (k === 's' || k === 'f') this.player.shooting = true;
+            // F key = shoot (toggle on)
+            if (k === 'f') this.player.shooting = true;
             if (k === 'v') {
                 const modes = ['tps', 'fps', 'top'];
                 const idx = (modes.indexOf(this.cameraMode) + 1) % modes.length;
@@ -1731,7 +2660,7 @@ class Game {
         this._onKeyUp = (e) => {
             const k = e.key.toLowerCase();
             if (k in this.player.keys) this.player.keys[k] = false;
-            if (k === 's' || k === 'f') this.player.shooting = false;
+            if (k === 'f') this.player.shooting = false;
         };
         this._onMouseMove = (e) => {
             // Smooth mouse position — prevents micro-jitter from high-DPI mice
@@ -1976,7 +2905,7 @@ class Game {
         this.wave++;
         if (this.wave > this.currentLevel.waves) { this.levelComplete(); return; }
         const lvl = this.currentLevel;
-        const count = lvl.enemiesPerWave + Math.floor(this.wave * 1.5);
+        const count = lvl.enemiesPerWave + Math.floor(this.wave * 0.8);
         this.totalSpawned += count;
         for (let i = 0; i < count; i++) {
             const spawn = this.map.getEnemySpawn(this.player.x, this.player.z);

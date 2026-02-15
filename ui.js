@@ -81,6 +81,12 @@ document.getElementById('btn-heroes').addEventListener('click', () => {
     renderHeroSelect();
 });
 
+document.getElementById('btn-themes').addEventListener('click', () => {
+    audio.playClick();
+    showScreen('theme-select');
+    renderThemeSelect();
+});
+
 document.getElementById('btn-settings').addEventListener('click', () => {
     audio.playClick();
     showScreen('settings-screen');
@@ -89,6 +95,7 @@ document.getElementById('btn-settings').addEventListener('click', () => {
 
 // Back buttons
 document.getElementById('btn-hero-back').addEventListener('click', () => { audio.playClick(); showScreen('main-menu'); updateMenuInfo(); });
+document.getElementById('btn-theme-back').addEventListener('click', () => { audio.playClick(); showScreen('main-menu'); updateMenuInfo(); });
 document.getElementById('btn-level-back').addEventListener('click', () => { audio.playClick(); showScreen('main-menu'); updateMenuInfo(); });
 document.getElementById('btn-shop-back').addEventListener('click', () => { audio.playClick(); showScreen('main-menu'); updateMenuInfo(); });
 document.getElementById('btn-checkin-back').addEventListener('click', () => { audio.playClick(); showScreen('main-menu'); updateMenuInfo(); });
@@ -127,6 +134,34 @@ function renderHeroSelect() {
     });
 }
 
+// ===== THEME SELECT =====
+function renderThemeSelect() {
+    const container = document.getElementById('theme-cards');
+    container.innerHTML = '';
+    Object.entries(THEMES).forEach(([id, theme]) => {
+        const card = document.createElement('div');
+        card.className = 'theme-card' + (state.themeId === id ? ' selected' : '');
+        const hexStr = (c) => '#' + c.toString(16).padStart(6, '0');
+        card.innerHTML = `
+            <div class="theme-icon">${theme.icon}</div>
+            <div class="theme-name">${theme.name}</div>
+            <div class="theme-preview">
+                <div class="theme-swatch" style="background:${hexStr(theme.ground)}"></div>
+                <div class="theme-swatch" style="background:${hexStr(theme.buildings[0])}"></div>
+                <div class="theme-swatch" style="background:${hexStr(theme.buildings[2])}"></div>
+                <div class="theme-swatch" style="background:${hexStr(theme.foliageColor)}"></div>
+            </div>
+        `;
+        card.addEventListener('click', () => {
+            audio.playClick();
+            state.selectTheme(id);
+            renderThemeSelect();
+            notify(`${theme.name} theme selected!`);
+        });
+        container.appendChild(card);
+    });
+}
+
 // ===== LEVEL SELECT =====
 function renderLevelSelect(difficulty) {
     const grid = document.getElementById('levels-grid');
@@ -142,10 +177,12 @@ function renderLevelSelect(difficulty) {
 
         const card = document.createElement('div');
         card.className = 'level-card' + (!unlocked ? ' locked' : '') + (result ? ' completed' : '');
+        const bombTotal = lvl.bombs ? Object.values(lvl.bombs).reduce((a, b) => a + b, 0) : 0;
         card.innerHTML = `
             <div class="level-num">${i}</div>
             <div class="level-stars">${result ? '★'.repeat(result.stars) + '☆'.repeat(3 - result.stars) : '☆☆☆'}</div>
             <div class="level-diff">${lvl.diffLabel}</div>
+            <div class="level-bombs">💣 ${bombTotal}</div>
         `;
         if (unlocked) {
             card.addEventListener('click', () => {
