@@ -2466,8 +2466,8 @@ class Game {
     }
 
     _clampToRect(rect, rawX, rawY) {
-        const maxX = Math.max(0, rect.width - 1);
-        const maxY = Math.max(0, rect.height - 1);
+        const maxX = Math.max(0, rect.width);
+        const maxY = Math.max(0, rect.height);
         const clampedX = Math.min(maxX, Math.max(0, rawX));
         const clampedY = Math.min(maxY, Math.max(0, rawY));
         const normX = rect.width ? clampedX / rect.width : 0.5;
@@ -2701,8 +2701,6 @@ class Game {
             // Light smoothing: 70% new + 30% old
             this.mouseX = this.mouseX * 0.3 + targetMX * 0.7;
             this.mouseY = this.mouseY * 0.3 + targetMY * 0.7;
-            this.mouseX = Math.max(-1, Math.min(1, this.mouseX));
-            this.mouseY = Math.max(-1, Math.min(1, this.mouseY));
             this._rawMouseX = clampedX;
             this._rawMouseY = clampedY;
         };
