@@ -18,6 +18,11 @@
     --border: #222;
     --font-main: 'Rajdhani', sans-serif;
     --font-title: 'Orbitron', sans-serif;
+    /* HUD Spacing Variables */
+    --hud-margin: 15px;
+    --minimap-bottom: 120px;
+    --hud-weapon-bottom: 290px;
+    --hud-bottom-info-bottom: 280px;
 }
 
 * {
@@ -897,7 +902,7 @@ body {
 #score-text { color: var(--accent); }
 #hud-weapon {
     position: absolute;
-    bottom: 290px;
+    bottom: var(--hud-weapon-bottom);
     right: 15px;
     background: rgba(0,0,0,0.5);
     padding: 8px 20px;
@@ -945,7 +950,7 @@ body {
 }
 #hud-bottom-info {
     position: absolute;
-    bottom: 280px;
+    bottom: var(--hud-bottom-info-bottom);
     left: 15px;
 }
 #kill-feed {
@@ -960,7 +965,7 @@ body {
 #kill-feed.show { opacity: 1; }
 #minimap-canvas {
     position: absolute;
-    bottom: 120px;
+    bottom: var(--minimap-bottom);
     left: 15px;
     width: 160px;
     height: 160px;
@@ -1351,7 +1356,7 @@ body {
     #minimap-canvas { width: 80px; height: 80px; bottom: 170px; }
     .health-bar-bg { width: 90px; }
     #hud-camera { display: none; }
-    #btn-mobile-pause { top: 10px; right: 10px; width: 36px; height: 36px; }
+    #btn-mobile-pause { top: 15px; right: 15px; width: 36px; height: 36px; }
 
     #splash-img { width: 100%; opacity: 0.3; }
     #loading-screen::after { width: 100%; background: rgba(10,10,18,0.6); }
