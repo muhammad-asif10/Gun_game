@@ -2466,12 +2466,12 @@ class Game {
     }
 
     _clampToRect(rect, rawX, rawY) {
-        const maxX = Math.max(0, rect.width);
-        const maxY = Math.max(0, rect.height);
+        const maxX = Math.max(0, rect.width - 1);
+        const maxY = Math.max(0, rect.height - 1);
         const clampedX = Math.min(maxX, Math.max(0, rawX));
         const clampedY = Math.min(maxY, Math.max(0, rawY));
-        const normX = rect.width ? clampedX / rect.width : 0.5;
-        const normY = rect.height ? clampedY / rect.height : 0.5;
+        const normX = maxX ? clampedX / maxX : 0.5;
+        const normY = maxY ? clampedY / maxY : 0.5;
         return { clampedX, clampedY, normX, normY };
     }
 
@@ -2697,7 +2697,7 @@ class Game {
             const { clampedX, clampedY, normX, normY } = this._clampToRect(rect, rawX, rawY);
             // Smooth mouse position — prevents micro-jitter from high-DPI mice
             const targetMX = normX * 2 - 1;
-            const targetMY = -(normY * 2 - 1);
+            const targetMY = 1 - normY * 2;
             // Light smoothing: 70% new + 30% old
             this.mouseX = this.mouseX * 0.3 + targetMX * 0.7;
             this.mouseY = this.mouseY * 0.3 + targetMY * 0.7;
