@@ -2466,8 +2466,8 @@ class Game {
     }
 
     _clampToRect(rect, rawX, rawY) {
-        const maxX = Math.max(0, rect.width - 1);
-        const maxY = Math.max(0, rect.height - 1);
+        const maxX = Math.max(0, rect.width);
+        const maxY = Math.max(0, rect.height);
         const clampedX = Math.min(maxX, Math.max(0, rawX));
         const clampedY = Math.min(maxY, Math.max(0, rawY));
         const normX = maxX ? clampedX / maxX : 0.5;
@@ -2501,8 +2501,8 @@ class Game {
             }
             const rect = this.canvas.getBoundingClientRect();
             if (rect.width && rect.height) {
-                const rawX = Number.isFinite(this._rawMouseX) ? this._rawMouseX : rect.width / 2;
-                const rawY = Number.isFinite(this._rawMouseY) ? this._rawMouseY : rect.height / 2;
+                const rawX = this._rawMouseX;
+                const rawY = this._rawMouseY;
                 const { clampedX, clampedY } = this._clampToRect(rect, rawX, rawY);
                 this._rawMouseX = clampedX;
                 this._rawMouseY = clampedY;
