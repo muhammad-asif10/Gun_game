@@ -1356,7 +1356,7 @@ body {
     #minimap-canvas { width: 80px; height: 80px; bottom: 170px; }
     .health-bar-bg { width: 90px; }
     #hud-camera { display: none; }
-    #btn-mobile-pause { top: 15px; right: 15px; width: 36px; height: 36px; }
+    #btn-mobile-pause { top: var(--hud-margin); right: var(--hud-margin); width: 36px; height: 36px; }
 
     #splash-img { width: 100%; opacity: 0.3; }
     #loading-screen::after { width: 100%; background: rgba(10,10,18,0.6); }
