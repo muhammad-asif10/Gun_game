@@ -27,8 +27,8 @@ function showScreen(id) {
             clearInterval(interval);
             setTimeout(() => {
                 showScreen('main-menu');
-                audio.init();
-                audio.playMenuMusic();
+                audio?.init();
+                audio?.playMenuMusic();
                 updateMenuInfo();
             }, 400);
         }
@@ -37,9 +37,10 @@ function showScreen(id) {
 
 // ===== MENU INFO =====
 function updateMenuInfo() {
-    document.getElementById('menu-coins').textContent = state.coins;
-    document.getElementById('menu-level').textContent = state.data.maxLevelUnlocked;
-    document.getElementById('menu-hero').textContent = state.hero.name;
+    document.getElementById('menu-coins').textContent = state?.coins ?? 0;
+    document.getElementById('menu-level').textContent = state?.data?.maxLevelUnlocked ?? 1;
+    const heroName = state?.hero?.name ?? 'Unknown Hero';
+    document.getElementById('menu-hero').textContent = heroName;
 }
 
 // ===== NOTIFICATIONS =====
@@ -57,49 +58,49 @@ function notify(msg, type = '') {
 
 // ===== MAIN MENU BUTTONS =====
 document.getElementById('btn-play').addEventListener('click', () => {
-    audio.resume();
-    audio.playClick();
+    audio?.resume();
+    audio?.playClick();
     showScreen('level-select');
     renderLevelSelect('easy');
 });
 
 document.getElementById('btn-shop').addEventListener('click', () => {
-    audio.playClick();
+    audio?.playClick();
     showScreen('shop-screen');
     renderShop();
 });
 
 document.getElementById('btn-checkin').addEventListener('click', () => {
-    audio.playClick();
+    audio?.playClick();
     showScreen('checkin-screen');
     renderCheckin();
 });
 
 document.getElementById('btn-heroes').addEventListener('click', () => {
-    audio.playClick();
+    audio?.playClick();
     showScreen('hero-select');
     renderHeroSelect();
 });
 
 document.getElementById('btn-themes').addEventListener('click', () => {
-    audio.playClick();
+    audio?.playClick();
     showScreen('theme-select');
     renderThemeSelect();
 });
 
 document.getElementById('btn-settings').addEventListener('click', () => {
-    audio.playClick();
+    audio?.playClick();
     showScreen('settings-screen');
     loadSettings();
 });
 
 // Back buttons
-document.getElementById('btn-hero-back').addEventListener('click', () => { audio.playClick(); showScreen('main-menu'); updateMenuInfo(); });
-document.getElementById('btn-theme-back').addEventListener('click', () => { audio.playClick(); showScreen('main-menu'); updateMenuInfo(); });
-document.getElementById('btn-level-back').addEventListener('click', () => { audio.playClick(); showScreen('main-menu'); updateMenuInfo(); });
-document.getElementById('btn-shop-back').addEventListener('click', () => { audio.playClick(); showScreen('main-menu'); updateMenuInfo(); });
-document.getElementById('btn-checkin-back').addEventListener('click', () => { audio.playClick(); showScreen('main-menu'); updateMenuInfo(); });
-document.getElementById('btn-settings-back').addEventListener('click', () => { audio.playClick(); showScreen('main-menu'); updateMenuInfo(); });
+document.getElementById('btn-hero-back').addEventListener('click', () => { audio?.playClick(); showScreen('main-menu'); updateMenuInfo(); });
+document.getElementById('btn-theme-back').addEventListener('click', () => { audio?.playClick(); showScreen('main-menu'); updateMenuInfo(); });
+document.getElementById('btn-level-back').addEventListener('click', () => { audio?.playClick(); showScreen('main-menu'); updateMenuInfo(); });
+document.getElementById('btn-shop-back').addEventListener('click', () => { audio?.playClick(); showScreen('main-menu'); updateMenuInfo(); });
+document.getElementById('btn-checkin-back').addEventListener('click', () => { audio?.playClick(); showScreen('main-menu'); updateMenuInfo(); });
+document.getElementById('btn-settings-back').addEventListener('click', () => { audio?.playClick(); showScreen('main-menu'); updateMenuInfo(); });
 
 // ===== HERO SELECT =====
 function renderHeroSelect() {
@@ -125,7 +126,7 @@ function renderHeroSelect() {
             <p style="margin-top:12px;font-size:12px;color:#888;position:relative;z-index:1">${hero.desc}</p>
         `;
         card.addEventListener('click', () => {
-            audio.playClick();
+            audio?.playClick();
             state.selectHero(hero.id);
             renderHeroSelect();
             notify(`${hero.name} selected!`);
@@ -153,7 +154,7 @@ function renderThemeSelect() {
             </div>
         `;
         card.addEventListener('click', () => {
-            audio.playClick();
+            audio?.playClick();
             state.selectTheme(id);
             renderThemeSelect();
             notify(`${theme.name} theme selected!`);

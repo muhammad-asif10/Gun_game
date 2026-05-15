@@ -3724,4 +3724,12 @@ function disposeObject(obj) {
     else disposeNode(obj);
 }
 
-const game = new Game();
+// Initialize game only after DOM is fully loaded
+let game = null;
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        game = new Game();
+    });
+} else {
+    game = new Game();
+}
