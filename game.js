@@ -1381,11 +1381,14 @@ class Bullet3D {
     }
 
     update() {
-        const move = this.dir.clone().multiplyScalar(this.speed);
+        this._moveVec = this._moveVec || new THREE.Vector3();
+        this._trailOffsetVec = this._trailOffsetVec || new THREE.Vector3();
+
+        const move = this._moveVec.copy(this.dir).multiplyScalar(this.speed);
         this.mesh.position.add(move);
         this.traveled += this.speed;
         // Trail follows
-        this.trail.position.copy(this.mesh.position).add(this.dir.clone().multiplyScalar(-0.15));
+        this.trail.position.copy(this.mesh.position).add(this._trailOffsetVec.copy(this.dir).multiplyScalar(-0.15));
         this.trail.lookAt(this.mesh.position);
         if (this.traveled > this.range) this.alive = false;
     }
@@ -1393,6 +1396,8 @@ class Bullet3D {
     destroy(scene) {
         scene.remove(this.mesh);
         scene.remove(this.trail);
+        disposeObject(this.mesh);
+        disposeObject(this.trail);
     }
 }
 
@@ -1450,6 +1455,7 @@ class Bomb3D {
 
     destroy() {
         this.scene.remove(this.mesh);
+        disposeObject(this.mesh);
     }
 }
 
@@ -1535,7 +1541,10 @@ class Explosion3D {
     }
 
     destroy() {
-        for (const m of this.meshes) this.scene.remove(m);
+        for (const m of this.meshes) {
+            this.scene.remove(m);
+            disposeObject(m);
+        }
     }
 }
 
@@ -1675,11 +1684,14 @@ class Enemy3D {
             this.shootCooldown -= dt;
             if (this.shootCooldown <= 0 && dist < this.range * 1.5 && Math.random() < 0.3) {
                 this.shootCooldown = this.shootRate * 1.5;
-                const dir = new THREE.Vector3(dx, 0, dz).normalize();
+                this._shootDir = this._shootDir || new THREE.Vector3();
+                this._bulletPos = this._bulletPos || new THREE.Vector3();
+                this._bulletOffset = this._bulletOffset || new THREE.Vector3();
+                const dir = this._shootDir.set(dx, 0, dz).normalize();
                 dir.x += (Math.random() - 0.5) * 0.25;
                 dir.z += (Math.random() - 0.5) * 0.25;
                 dir.normalize();
-                const bulletPos = new THREE.Vector3(this.x, 1.1, this.z).add(dir.clone().multiplyScalar(0.5));
+                const bulletPos = this._bulletPos.set(this.x, 1.1, this.z).add(this._bulletOffset.copy(dir).multiplyScalar(0.5));
                 bullets.push(new Bullet3D(scene, bulletPos, dir, {
                     damage: this.damage, range: this.range * 20, bulletSpeed: 0.5, explosive: false
                 }, true));
@@ -1695,11 +1707,14 @@ class Enemy3D {
             this.shootCooldown -= dt;
             if (this.shootCooldown <= 0) {
                 this.shootCooldown = this.shootRate;
-                const dir = new THREE.Vector3(dx, 0, dz).normalize();
+                this._shootDir = this._shootDir || new THREE.Vector3();
+                this._bulletPos = this._bulletPos || new THREE.Vector3();
+                this._bulletOffset = this._bulletOffset || new THREE.Vector3();
+                const dir = this._shootDir.set(dx, 0, dz).normalize();
                 dir.x += (Math.random() - 0.5) * 0.15;
                 dir.z += (Math.random() - 0.5) * 0.15;
                 dir.normalize();
-                const bulletPos = new THREE.Vector3(this.x, 1.1, this.z).add(dir.clone().multiplyScalar(0.5));
+                const bulletPos = this._bulletPos.set(this.x, 1.1, this.z).add(this._bulletOffset.copy(dir).multiplyScalar(0.5));
                 bullets.push(new Bullet3D(scene, bulletPos, dir, {
                     damage: this.damage, range: this.range * 20, bulletSpeed: 0.5, explosive: false
                 }, true));
@@ -1779,6 +1794,9 @@ class Enemy3D {
         scene.remove(this.mesh);
         scene.remove(this.label);
         scene.remove(this.hpBar);
+        disposeObject(this.mesh);
+        disposeObject(this.label);
+        disposeObject(this.hpBar);
     }
 }
 
@@ -2107,6 +2125,8 @@ class Pickup3D {
     destroy(scene) {
         scene.remove(this.mesh);
         scene.remove(this.glow);
+        disposeObject(this.mesh);
+        disposeObject(this.glow);
     }
 }
 
@@ -2354,11 +2374,14 @@ class Player3D {
             for (let p = 0; p < pellets; p++) {
                 const spread = (Math.random() - 0.5) * w.spread;
                 const accMult = 1 - (this.hero.stats.accuracy - 70) / 200;
-                const dir = new THREE.Vector3(
+                this._shootDir = this._shootDir || new THREE.Vector3();
+                this._bulletPos = this._bulletPos || new THREE.Vector3();
+                this._bulletOffset = this._bulletOffset || new THREE.Vector3();
+                const dir = this._shootDir.set(
                     Math.sin(this.angle + spread * accMult), 0,
                     Math.cos(this.angle + spread * accMult)
                 ).normalize();
-                const bulletPos = new THREE.Vector3(this.x, this.y + 1.1, this.z).add(dir.clone().multiplyScalar(0.6));
+                const bulletPos = this._bulletPos.set(this.x, this.y + 1.1, this.z).add(this._bulletOffset.copy(dir).multiplyScalar(0.6));
                 bullets.push(new Bullet3D(this.scene, bulletPos, dir, w));
             }
             this.ammo--;
@@ -2409,17 +2432,17 @@ class Player3D {
     destroy(scene) {
         scene.remove(this.mesh);
         scene.remove(this.label);
+        disposeObject(this.mesh);
+        disposeObject(this.label);
     }
 }
 
 // ===== MAIN 3D GAME =====
 class Game {
     constructor() {
-        this.canvas = document.getElementById('game-canvas');
-        this.miniCanvas = document.getElementById('minimap-canvas');
-        this.miniCtx = this.miniCanvas.getContext('2d');
-        this.miniCanvas.width = 160;
-        this.miniCanvas.height = 160;
+        this.canvas = null;
+        this.miniCanvas = null;
+        this.miniCtx = null;
 
         this.renderer = null;
         this.scene = null;
@@ -2476,6 +2499,13 @@ class Game {
     }
 
     initRenderer() {
+        if (!this.canvas) this.canvas = document.getElementById('game-canvas');
+        if (!this.miniCanvas) this.miniCanvas = document.getElementById('minimap-canvas');
+        if (this.miniCanvas && !this.miniCtx) {
+            this.miniCtx = this.miniCanvas.getContext('2d');
+            this.miniCanvas.width = 160;
+            this.miniCanvas.height = 160;
+        }
         if (this.renderer) return;
         const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
         this.renderer = new THREE.WebGLRenderer({
@@ -2642,7 +2672,9 @@ class Game {
         // Cleanup
         if (this.scene) {
             while (this.scene.children.length > 0) {
-                this.scene.remove(this.scene.children[0]);
+                const child = this.scene.children[0];
+                this.scene.remove(child);
+                disposeObject(child);
             }
         }
     }
@@ -2999,8 +3031,10 @@ class Game {
     updateAim() {
         // On mobile, aim is controlled by touch drag — skip raycast
         if (!this.isMobile) {
-            this.raycaster.setFromCamera(new THREE.Vector2(this.mouseX, this.mouseY), this.camera);
-            const intersection = new THREE.Vector3();
+            this._aimMouseVec2 = this._aimMouseVec2 || new THREE.Vector2();
+            this._aimIntersectionVec3 = this._aimIntersectionVec3 || new THREE.Vector3();
+            this.raycaster.setFromCamera(this._aimMouseVec2.set(this.mouseX, this.mouseY), this.camera);
+            const intersection = this._aimIntersectionVec3;
             if (this.raycaster.ray.intersectPlane(this.groundPlane, intersection)) {
                 const dx = intersection.x - this.player.x;
                 const dz = intersection.z - this.player.z;
@@ -3035,7 +3069,9 @@ class Game {
         if (this.enemies.length > 0) {
             let bestEnemy = null;
             let bestScore = Infinity;
-            const aimDir = new THREE.Vector2(Math.sin(this.aimAngle), Math.cos(this.aimAngle)).normalize();
+            this._aimDirVec2 = this._aimDirVec2 || new THREE.Vector2();
+            this._toEnemyVec2 = this._toEnemyVec2 || new THREE.Vector2();
+            const aimDir = this._aimDirVec2.set(Math.sin(this.aimAngle), Math.cos(this.aimAngle)).normalize();
 
             for (const e of this.enemies) {
                 if (!e.alive) continue;
@@ -3044,7 +3080,7 @@ class Game {
                 const dist = Math.sqrt(ex * ex + ez * ez);
                 if (dist > 30 || dist < 1) continue;
 
-                const toEnemy = new THREE.Vector2(ex / dist, ez / dist);
+                const toEnemy = this._toEnemyVec2.set(ex / dist, ez / dist);
                 const dot = aimDir.dot(toEnemy);
 
                 // Wider cone when moving (120°), normal cone when still (80°)
@@ -3666,6 +3702,26 @@ function dist2D(x1, z1, x2, z2) {
     const dx = x2 - x1;
     const dz = z2 - z1;
     return Math.sqrt(dx * dx + dz * dz);
+}
+
+function disposeObject(obj) {
+    if (!obj) return;
+    const disposeNode = (node) => {
+        if (node.geometry && typeof node.geometry.dispose === 'function') {
+            node.geometry.dispose();
+        }
+        if (node.material) {
+            if (Array.isArray(node.material)) {
+                for (const mat of node.material) {
+                    if (mat && typeof mat.dispose === 'function') mat.dispose();
+                }
+            } else if (typeof node.material.dispose === 'function') {
+                node.material.dispose();
+            }
+        }
+    };
+    if (typeof obj.traverse === 'function') obj.traverse(disposeNode);
+    else disposeNode(obj);
 }
 
 const game = new Game();
