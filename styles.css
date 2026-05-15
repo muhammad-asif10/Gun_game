@@ -812,7 +812,7 @@ body {
 #hud > * { pointer-events: auto; }
 #hud-top-left {
     position: absolute;
-    top: 15px; left: 15px;
+    top: var(--hud-margin); left: var(--hud-margin);
 }
 .hud-health {
     display: flex;
@@ -885,8 +885,8 @@ body {
 }
 #hud-top-right {
     position: absolute;
-    top: 15px;
-    right: 15px;
+    top: var(--hud-margin);
+    right: var(--hud-margin);
     text-align: right;
 }
 .hud-score, .hud-coins-game {
@@ -903,7 +903,7 @@ body {
 #hud-weapon {
     position: absolute;
     bottom: var(--hud-weapon-bottom);
-    right: 15px;
+    right: var(--hud-margin);
     background: rgba(0,0,0,0.5);
     padding: 8px 20px;
     border: 1px solid var(--border);
@@ -951,7 +951,7 @@ body {
 #hud-bottom-info {
     position: absolute;
     bottom: var(--hud-bottom-info-bottom);
-    left: 15px;
+    left: var(--hud-margin);
 }
 #kill-feed {
     font-family: var(--font-title);
@@ -966,7 +966,7 @@ body {
 #minimap-canvas {
     position: absolute;
     bottom: var(--minimap-bottom);
-    left: 15px;
+    left: var(--hud-margin);
     width: 160px;
     height: 160px;
     border: 1px solid var(--border);
@@ -1222,7 +1222,7 @@ body {
 #kill-list-panel {
     position: absolute;
     top: 120px;
-    right: 15px;
+    right: var(--hud-margin);
     width: 200px;
     z-index: 8;
     font-family: var(--font-main);
@@ -1512,8 +1512,8 @@ body {
 
 #btn-mobile-pause {
     position: absolute;
-    top: 15px;
-    right: 15px;
+    top: var(--hud-margin);
+    right: var(--hud-margin);
     border-color: rgba(180,180,180,0.3);
 }
 
