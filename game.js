@@ -1934,8 +1934,8 @@ class Vehicle3D {
 
         if (Math.abs(this.speed) < 0.001) this.speed = 0;
 
-        if (left) this.angle += this.turnSpeed * dtScale * (this.speed > 0 ? 1 : this.speed < 0 ? -1 : 0);
-        if (right) this.angle -= this.turnSpeed * dtScale * (this.speed > 0 ? 1 : this.speed < 0 ? -1 : 0);
+        if (left) this.angle -= this.turnSpeed * dtScale * (this.speed > 0 ? 1 : this.speed < 0 ? -1 : 0);
+        if (right) this.angle += this.turnSpeed * dtScale * (this.speed > 0 ? 1 : this.speed < 0 ? -1 : 0);
 
         const newX = this.x + Math.sin(this.angle) * this.speed * dtScale;
         const newZ = this.z + Math.cos(this.angle) * this.speed * dtScale;
@@ -2473,21 +2473,33 @@ class Game {
             antialias: !isMobile,
             powerPreference: isMobile ? 'high-performance' : 'default'
         });
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        const sizeWidth = this.canvas.clientWidth || window.innerWidth;
+        const sizeHeight = this.canvas.clientHeight || window.innerHeight;
+        this.renderer.setSize(sizeWidth, sizeHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
         this.renderer.shadowMap.enabled = !isMobile;
         if (!isMobile) this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.renderer.setClearColor(0x0a0a15);
         const onResize = () => {
             if (!this.renderer) return;
-            this.renderer.setSize(window.innerWidth, window.innerHeight);
+            const width = this.canvas.clientWidth || window.innerWidth;
+            const height = this.canvas.clientHeight || window.innerHeight;
+            this.renderer.setSize(width, height);
             if (this.camera) {
-                this.camera.aspect = window.innerWidth / window.innerHeight;
+                this.camera.aspect = width / height;
                 this.camera.updateProjectionMatrix();
             }
+            const rect = this.canvas.getBoundingClientRect();
+            this._rawMouseX = Math.min(rect.width, Math.max(0, this._rawMouseX));
+            this._rawMouseY = Math.min(rect.height, Math.max(0, this._rawMouseY));
         };
         window.addEventListener('resize', onResize);
         window.addEventListener('orientationchange', () => setTimeout(onResize, 150));
+        const rect = this.canvas.getBoundingClientRect();
+        if (rect.width && rect.height) {
+            this._rawMouseX = rect.width / 2;
+            this._rawMouseY = rect.height / 2;
+        }
     }
 
     start(levelNum) {
@@ -2663,14 +2675,22 @@ class Game {
             if (k === 'f') this.player.shooting = false;
         };
         this._onMouseMove = (e) => {
+            const rect = this.canvas.getBoundingClientRect();
+            if (!rect.width || !rect.height) return;
+            const relX = (e.clientX - rect.left) / rect.width;
+            const relY = (e.clientY - rect.top) / rect.height;
+            const clampedX = Math.max(0, Math.min(1, relX));
+            const clampedY = Math.max(0, Math.min(1, relY));
             // Smooth mouse position — prevents micro-jitter from high-DPI mice
-            const targetMX = (e.clientX / window.innerWidth) * 2 - 1;
-            const targetMY = -(e.clientY / window.innerHeight) * 2 + 1;
+            const targetMX = clampedX * 2 - 1;
+            const targetMY = -(clampedY * 2 - 1);
             // Light smoothing: 70% new + 30% old
             this.mouseX = this.mouseX * 0.3 + targetMX * 0.7;
             this.mouseY = this.mouseY * 0.3 + targetMY * 0.7;
-            this._rawMouseX = e.clientX;
-            this._rawMouseY = e.clientY;
+            this.mouseX = Math.max(-1, Math.min(1, this.mouseX));
+            this.mouseY = Math.max(-1, Math.min(1, this.mouseY));
+            this._rawMouseX = clampedX * rect.width;
+            this._rawMouseY = clampedY * rect.height;
         };
         this._onMouseDown = (e) => {
             if (e.button === 0) this.player.shooting = true;
