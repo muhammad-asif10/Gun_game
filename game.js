@@ -2465,6 +2465,16 @@ class Game {
         this.groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
     }
 
+    _clampToRect(rect, rawX, rawY) {
+        const maxX = Math.max(0, rect.width - 1);
+        const maxY = Math.max(0, rect.height - 1);
+        const clampedX = Math.min(maxX, Math.max(0, rawX));
+        const clampedY = Math.min(maxY, Math.max(0, rawY));
+        const normX = rect.width ? clampedX / rect.width : 0.5;
+        const normY = rect.height ? clampedY / rect.height : 0.5;
+        return { clampedX, clampedY, normX, normY };
+    }
+
     initRenderer() {
         if (this.renderer) return;
         const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
@@ -2493,8 +2503,9 @@ class Game {
             if (rect.width && rect.height) {
                 const rawX = Number.isFinite(this._rawMouseX) ? this._rawMouseX : rect.width / 2;
                 const rawY = Number.isFinite(this._rawMouseY) ? this._rawMouseY : rect.height / 2;
-                this._rawMouseX = Math.min(rect.width, Math.max(0, rawX));
-                this._rawMouseY = Math.min(rect.height, Math.max(0, rawY));
+                const { clampedX, clampedY } = this._clampToRect(rect, rawX, rawY);
+                this._rawMouseX = clampedX;
+                this._rawMouseY = clampedY;
             }
         };
         window.addEventListener('resize', onResize);
@@ -2681,20 +2692,19 @@ class Game {
         this._onMouseMove = (e) => {
             const rect = this.canvas.getBoundingClientRect();
             if (!rect.width || !rect.height) return;
-            const relX = (e.clientX - rect.left) / rect.width;
-            const relY = (e.clientY - rect.top) / rect.height;
-            const clampedX = Math.max(0, Math.min(1, relX));
-            const clampedY = Math.max(0, Math.min(1, relY));
+            const rawX = e.clientX - rect.left;
+            const rawY = e.clientY - rect.top;
+            const { clampedX, clampedY, normX, normY } = this._clampToRect(rect, rawX, rawY);
             // Smooth mouse position — prevents micro-jitter from high-DPI mice
-            const targetMX = clampedX * 2 - 1;
-            const targetMY = -(clampedY * 2 - 1);
+            const targetMX = normX * 2 - 1;
+            const targetMY = -(normY * 2 - 1);
             // Light smoothing: 70% new + 30% old
             this.mouseX = this.mouseX * 0.3 + targetMX * 0.7;
             this.mouseY = this.mouseY * 0.3 + targetMY * 0.7;
             this.mouseX = Math.max(-1, Math.min(1, this.mouseX));
             this.mouseY = Math.max(-1, Math.min(1, this.mouseY));
-            this._rawMouseX = clampedX * rect.width;
-            this._rawMouseY = clampedY * rect.height;
+            this._rawMouseX = clampedX;
+            this._rawMouseY = clampedY;
         };
         this._onMouseDown = (e) => {
             if (e.button === 0) this.player.shooting = true;
