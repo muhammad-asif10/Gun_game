@@ -2490,8 +2490,12 @@ class Game {
                 this.camera.updateProjectionMatrix();
             }
             const rect = this.canvas.getBoundingClientRect();
-            this._rawMouseX = Math.min(rect.width, Math.max(0, this._rawMouseX));
-            this._rawMouseY = Math.min(rect.height, Math.max(0, this._rawMouseY));
+            if (rect.width && rect.height) {
+                const rawX = Number.isFinite(this._rawMouseX) ? this._rawMouseX : rect.width / 2;
+                const rawY = Number.isFinite(this._rawMouseY) ? this._rawMouseY : rect.height / 2;
+                this._rawMouseX = Math.min(rect.width, Math.max(0, rawX));
+                this._rawMouseY = Math.min(rect.height, Math.max(0, rawY));
+            }
         };
         window.addEventListener('resize', onResize);
         window.addEventListener('orientationchange', () => setTimeout(onResize, 150));
